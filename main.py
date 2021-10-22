@@ -551,15 +551,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         conversion of depth to camera space in action        
         """
-        msg = camspace(self.temp_save, self.res_s)
-        # Example()
-        print(msg)
+        # msg = camspace(self.temp_save, self.res_s)
+        # print(msg)
 
         self.statusBar().showMessage('Recorded session is saved successfully')
         db_ses_update(self, self.pDetails[0], self.sessionName, False, False)
-        # p = subprocess.Popen(['python', 'pro_bar.py'])
-        # self.start_p("wait", 50)
-        # Actions().progress_change()
+
         shutil.copytree(self.temp_save, self.sessionDir)
         print("copying completed")
         shutil.rmtree(self.temp_save)
