@@ -1,6 +1,6 @@
 import sys
-sys.path.insert(0, ".//include")
-sys.path.insert(1, ".//support_py")
+# sys.path.insert(0, ".//include")
+# sys.path.insert(1, ".//support_py")
 import os
 import pickle
 import msgpack as mp
@@ -22,24 +22,24 @@ from PyQt5.QtGui import *
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import *
 from numpy import random
-from support import db_create
-from support import db_ses_fetch
-from support import db_ses_update
 
-import PyKinectRuntime_1 as PyKinectRuntime
-import PyKinectV2_1 as PyKinectV2
-import kinectmapper
-import timeset
-from color_py import initialize_color
+from support_py.support import db_create
+from support_py.support import db_ses_fetch
+from support_py.support import db_ses_update
+
+import include.PyKinectRuntime_1 as PyKinectRuntime
+import include.PyKinectV2_1 as PyKinectV2
+from support_py import timeset
+from support_py.color_py import initialize_color
 from guiDesignV3 import Ui_MainWindow
-from support import get_clickedtask
-from support import get_calCalibData
+from support_py.support import get_clickedtask
+from support_py.support import get_calCalibData
 
-from support import save_patient_details
-from support import db_fetch
-from support import db_remove_all
-from support import db_p_select
-from write_xyz_camspace import camspace
+from support_py.support import save_patient_details
+from support_py.support import db_fetch
+from support_py.support import db_remove_all
+from support_py.support import db_p_select
+from support_py.write_xyz_camspace import camspace
 
 
 """importing settings and creating folders"""
@@ -506,31 +506,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.newSession.setEnabled(True)
         self.statusBar().showMessage('Recorded session is discarded')
 
-    # def to_raw(self):
-    #     text = self.path_edit.toPlainText()
-    #     paths = text.splitlines()
-    #     movie_groups = io.get_movie_groups(paths)
-    #     n_movies = len(movie_groups)
-    #     if n_movies == 1:
-    #         text = "Converting 1 movie..."
-    #     else:
-    #         text = "Converting {} movies...".format(n_movies)
-    #     self.progress_dialog = QtWidgets.QProgressDialog(
-    #         text, "Cancel", 0, n_movies, self
-    #     )
-    #     progress_bar = QtWidgets.QProgressBar(self.progress_dialog)
-    #     progress_bar.setTextVisible(False)
-    #     self.progress_dialog.setBar(progress_bar)
-    #     self.progress_dialog.setMaximum(n_movies)
-    #     self.progress_dialog.setWindowTitle("Picasso: ToRaw")
-    #     self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-    #     self.progress_dialog.canceled.connect(self.cancel)
-    #     self.progress_dialog.closeEvent = self.cancel
-    #     self.worker = Worker(movie_groups)
-    #     self.worker.progressMade.connect(self.update_progress)
-    #     self.worker.finished.connect(self.on_finished)
-    #     self.worker.start()
-    #     self.progress_dialog.show()
 
     def start_p(self, text, maximum):
         """Start showing a progress dialog."""
@@ -551,6 +526,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         conversion of depth to camera space in action        
         """
+        #currently off
         # msg = camspace(self.temp_save, self.res_s)
         # print(msg)
 
