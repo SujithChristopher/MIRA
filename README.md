@@ -1,6 +1,6 @@
 # MIRA
 
-Machine Vision for Therapy
+MIRA (Machine Vision for Therapy)
 
 This is an experimental software, currently developed with PyQt5 framework.
 
