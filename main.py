@@ -500,48 +500,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # os.remove(self.colourfilename)
         # os.remove(self.depthfilename)
         self.data_saved = True
-        shutil.rmtree(self.temp_save)
+        shutil.rmtree(self.sessionDir)
 
         # os.remove(self.sessionDir)
         self.newSession.setEnabled(True)
         self.statusBar().showMessage('Recorded session is discarded')
-
-    # def to_raw(self):
-    #     text = self.path_edit.toPlainText()
-    #     paths = text.splitlines()
-    #     movie_groups = io.get_movie_groups(paths)
-    #     n_movies = len(movie_groups)
-    #     if n_movies == 1:
-    #         text = "Converting 1 movie..."
-    #     else:
-    #         text = "Converting {} movies...".format(n_movies)
-    #     self.progress_dialog = QtWidgets.QProgressDialog(
-    #         text, "Cancel", 0, n_movies, self
-    #     )
-    #     progress_bar = QtWidgets.QProgressBar(self.progress_dialog)
-    #     progress_bar.setTextVisible(False)
-    #     self.progress_dialog.setBar(progress_bar)
-    #     self.progress_dialog.setMaximum(n_movies)
-    #     self.progress_dialog.setWindowTitle("Picasso: ToRaw")
-    #     self.progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
-    #     self.progress_dialog.canceled.connect(self.cancel)
-    #     self.progress_dialog.closeEvent = self.cancel
-    #     self.worker = Worker(movie_groups)
-    #     self.worker.progressMade.connect(self.update_progress)
-    #     self.worker.finished.connect(self.on_finished)
-    #     self.worker.start()
-    #     self.progress_dialog.show()
-
-    def start_p(self, text, maximum):
-        """Start showing a progress dialog."""
-        self._progress = QProgressDialog()
-        self._progress.setMinimumDuration(50)
-        self._progress.setLabelText(text)
-        self._progress.setMaximum(maximum)
-        self._progress.setCancelButton(None)
-        self._progress.show()
-        QtWidgets.QApplication.processEvents()
-        print("processing")
 
     def saveSesFun(self):
         # self.newSession.setEnabled(True)
@@ -551,19 +514,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         conversion of depth to camera space in action        
         """
-        msg = camspace(self.temp_save, self.res_s)
+        # msg = camspace(self.sessionDir, self.res_s)
         # Example()
-        print(msg)
+        # print(msg)
 
         self.statusBar().showMessage('Recorded session is saved successfully')
         db_ses_update(self, self.pDetails[0], self.sessionName, False, False)
         # p = subprocess.Popen(['python', 'pro_bar.py'])
         # self.start_p("wait", 50)
         # Actions().progress_change()
-        shutil.copytree(self.temp_save, self.sessionDir)
-        print("copying completed")
-        shutil.rmtree(self.temp_save)
-        print("temp files removed")
+        # shutil.copytree(self.temp_save, self.sessionDir)
+        # print("copying completed")
+        # shutil.rmtree(self.temp_save)
+        # print("temp files removed")
 
         QMessageBox
         msgBox = QMessageBox()
@@ -811,7 +774,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             try:
                 if self.calibPlot:
-                    file = open(self.temp_save + "/" + "CALIBDATA" + "_" + self.tm + "_" +
+                    file = open(self.sessionDir + "/" + "CALIBDATA" + "_" + self.tm + "_" +
                                 str(self.rnd) + ".pickle", "wb")
                     pickle.dump(self.calibOrg, file)
                     pickle.dump(self.calibRotM, file)
@@ -821,9 +784,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 pass
 
         self.commonName = self.pFileName + " " + self.tM + " " + str(self.rnd)
-        self.depthfilename = self.temp_save + "/" + "DEPTH" + "_" + self.tm + "_" + str(
+        self.depthfilename = self.sessionDir + "/" + "DEPTH" + "_" + self.tm + "_" + str(
             self.rnd) + "_" + str(fileCounter) + ".msgpack"
-        self.colourfilename = self.temp_save + "/" + "COLOUR" + "_" + self.tm + "_" + str(
+        self.colourfilename = self.sessionDir + "/" + "COLOUR" + "_" + self.tm + "_" + str(
             self.rnd) + "_" + str(fileCounter) + ".msgpack"
         self.depthfile = open(self.depthfilename, 'wb')
         self.colourfile = open(self.colourfilename, 'wb')
