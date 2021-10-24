@@ -42,7 +42,6 @@ from support_py.support import db_remove_all
 from support_py.support import db_p_select
 from support_py.write_xyz_camspace import camspace
 
-
 """importing settings and creating folders"""
 
 temp_dir = r"C:\mira\temp"
