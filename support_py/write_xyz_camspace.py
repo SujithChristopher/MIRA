@@ -13,7 +13,8 @@ from pykinect2 import PyKinectRuntime
 from pykinect2 import PyKinectV2
 from pykinect2.PyKinectRuntime import _CameraSpacePoint
 
-from mapper import color_2_world
+from support_py import *
+# from mapper import color_2_world
 
 _kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth | PyKinectV2.FrameSourceTypes_Color)
 

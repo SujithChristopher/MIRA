@@ -15,8 +15,8 @@ import cv2
 import numpy as np
 import pandas as pd
 
-import kinectmapper
-from kinectmapper import PyKinectMapper
+from support_py import kinectmapper
+from support_py.kinectmapper import PyKinectMapper
 
 
 def read_pickle_file(fname):

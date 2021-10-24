@@ -27,8 +27,9 @@ from support_py.support import db_create
 from support_py.support import db_ses_fetch
 from support_py.support import db_ses_update
 
-import include.PyKinectRuntime_1 as PyKinectRuntime
-import include.PyKinectV2_1 as PyKinectV2
+from include import PyKinectV2_1 as PyKinectV2
+from include import PyKinectRuntime_1 as PyKinectRuntime
+
 from support_py import timeset
 from support_py.color_py import initialize_color
 from guiDesignV3 import Ui_MainWindow
