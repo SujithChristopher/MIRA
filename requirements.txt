@@ -4,6 +4,6 @@ pyqt5-tools
 matplotlib
 scipy
 msgpack
-msgpack_numpy
-opencv
+msgpack-numpy
+opencv-python
 fpstimer
