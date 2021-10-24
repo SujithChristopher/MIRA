@@ -7,3 +7,4 @@ msgpack
 msgpack-numpy
 opencv-python
 fpstimer
+pyserial

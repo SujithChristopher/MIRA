@@ -1,5 +1,9 @@
-import PyKinectV2_1 as PyKinectV2
-from PyKinectV2_1 import *
+from include import PyKinectV2_1 as PyKinectV2
+# from PyKinectV2 import *
+
+# import PyKinectV2_1 as PyKinectV2
+from include import *
+# from PyKinectV2_1 import *
 
 import ctypes
 import _ctypes 
