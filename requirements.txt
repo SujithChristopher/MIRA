@@ -1,0 +1,9 @@
+###### Requirements of python environment ######
+pyqt5
+pyqt5-tools
+matplotlib
+scipy
+msgpack
+msgpack_numpy
+opencv
+fpstimer
