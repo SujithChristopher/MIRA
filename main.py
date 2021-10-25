@@ -260,6 +260,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         First Tab: Initializing buttons
         """
+
         self.chooseRoi.clicked.connect(self.initUI)
         self.startRecording.setEnabled(False)
         self.startRecording.clicked.connect(self.startRec)
@@ -323,6 +324,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # list widget
         self.p_list_wid.itemClicked.connect(self.list_clicked)
         self.p_ses_wid.itemClicked.connect(self.ses_clicked)
+        self.p_open.setEnabled(False)
         self.p_open.clicked.connect(self.saveLocation_fun)
 
     def fix_roifun(self):
@@ -499,12 +501,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # os.remove(self.colourfilename)
         # os.remove(self.depthfilename)
-        self.data_saved = True
-        shutil.rmtree(self.sessionDir)
+        try:
+            self.data_saved = True
+            shutil.rmtree(self.sessionDir)
 
-        # os.remove(self.sessionDir)
-        self.newSession.setEnabled(True)
-        self.statusBar().showMessage('Recorded session is discarded')
+            # os.remove(self.sessionDir)
+            self.newSession.setEnabled(True)
+            self.statusBar().showMessage('Recorded session is discarded')
+        except:
+            pass
 
     def saveSesFun(self):
         # self.newSession.setEnabled(True)
@@ -584,6 +589,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.tabWidget.setCurrentIndex(0)
 
     def saveLocation(self):
+        self.p_open.setEnabled(True)
         self.chooseRoi.setEnabled(True)
 
         if not self.newSes:
