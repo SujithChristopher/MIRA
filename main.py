@@ -754,22 +754,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.sessionDir = os.path.join(self.savingDir, self.sessionName)
             self.temp_save = os.path.join(self.temp_dir, self.sessionName)
             # os.mkdir(self.sessionDir)
-            os.mkdir(self.temp_save)
+            os.mkdir(self.sessionDir)
 
-            self.parmsFileName = self.temp_save + "/" + "PARAMS" + "_" + self.tm + "_" + str(
+            self.parmsFileName = self.sessionDir + "/" + "PARAMS" + "_" + self.tm + "_" + str(
                 self.rnd) + ".msgpack"
+
             self.paramFile = open(self.parmsFileName, 'wb')
 
-            output_params = {"-vcodec": "libx264", "-crf": 0, "-preset": "slow"}
-
             # Define writer with defined parameters and suitable output filename for e.g. `Output.mp4`
-            self.vid_filename = self.temp_save + "/" + "Video.avi"
+            self.vid_filename = self.sessionDir + "/" + "Video.avi"
 
             if self.res_s:
-                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'FFV1'), self.fps_val,
+                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'XVID'), self.fps_val,
                                                  ((864, 736)))
             else:
-                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'FFV1'), self.fps_val,
+                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'XVID'), self.fps_val,
                                                  ((432, 368)))
 
             try:
@@ -790,7 +789,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.rnd) + "_" + str(fileCounter) + ".msgpack"
         self.depthfile = open(self.depthfilename, 'wb')
         self.colourfile = open(self.colourfilename, 'wb')
-        # print(self.depthfilename)
+
         print(f"creating files {fileCounter}")
 
     def readFrame(self, progress_callback):
@@ -861,7 +860,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.fileCounter = self.fileCounter + 1
                     self.colourfile.close()
                     self.depthfile.close()
-                    self.createFile(self.fileCounter)
+                    # self.createFile(self.fileCounter)
                     self.createFile(self.fileCounter)
                     self.counter = 1
 
