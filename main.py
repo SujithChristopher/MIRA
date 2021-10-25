@@ -260,6 +260,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         First Tab: Initializing buttons
         """
+
         self.chooseRoi.clicked.connect(self.initUI)
         self.startRecording.setEnabled(False)
         self.startRecording.clicked.connect(self.startRec)
@@ -323,6 +324,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # list widget
         self.p_list_wid.itemClicked.connect(self.list_clicked)
         self.p_ses_wid.itemClicked.connect(self.ses_clicked)
+        self.p_open.setEnabled(False)
         self.p_open.clicked.connect(self.saveLocation_fun)
 
     def fix_roifun(self):
@@ -499,24 +501,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # os.remove(self.colourfilename)
         # os.remove(self.depthfilename)
-        self.data_saved = True
-        shutil.rmtree(self.temp_save)
+        try:
+            self.data_saved = True
+            shutil.rmtree(self.sessionDir)
 
-        # os.remove(self.sessionDir)
-        self.newSession.setEnabled(True)
-        self.statusBar().showMessage('Recorded session is discarded')
-
-
-    def start_p(self, text, maximum):
-        """Start showing a progress dialog."""
-        self._progress = QProgressDialog()
-        self._progress.setMinimumDuration(50)
-        self._progress.setLabelText(text)
-        self._progress.setMaximum(maximum)
-        self._progress.setCancelButton(None)
-        self._progress.show()
-        QtWidgets.QApplication.processEvents()
-        print("processing")
+            # os.remove(self.sessionDir)
+            self.newSession.setEnabled(True)
+            self.statusBar().showMessage('Recorded session is discarded')
+        except:
+            pass
 
     def saveSesFun(self):
         # self.newSession.setEnabled(True)
@@ -526,17 +519,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """
         conversion of depth to camera space in action        
         """
-        #currently off
-        # msg = camspace(self.temp_save, self.res_s)
+        # msg = camspace(self.sessionDir, self.res_s)
+        # Example()
         # print(msg)
 
         self.statusBar().showMessage('Recorded session is saved successfully')
         db_ses_update(self, self.pDetails[0], self.sessionName, False, False)
-
-        shutil.copytree(self.temp_save, self.sessionDir)
-        print("copying completed")
-        shutil.rmtree(self.temp_save)
-        print("temp files removed")
+        # p = subprocess.Popen(['python', 'pro_bar.py'])
+        # self.start_p("wait", 50)
+        # Actions().progress_change()
+        # shutil.copytree(self.temp_save, self.sessionDir)
+        # print("copying completed")
+        # shutil.rmtree(self.temp_save)
+        # print("temp files removed")
 
         QMessageBox
         msgBox = QMessageBox()
@@ -594,6 +589,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.tabWidget.setCurrentIndex(0)
 
     def saveLocation(self):
+        self.p_open.setEnabled(True)
         self.chooseRoi.setEnabled(True)
 
         if not self.newSes:
@@ -764,27 +760,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.sessionDir = os.path.join(self.savingDir, self.sessionName)
             self.temp_save = os.path.join(self.temp_dir, self.sessionName)
             # os.mkdir(self.sessionDir)
-            os.mkdir(self.temp_save)
+            os.mkdir(self.sessionDir)
 
-            self.parmsFileName = self.temp_save + "/" + "PARAMS" + "_" + self.tm + "_" + str(
+            self.parmsFileName = self.sessionDir + "/" + "PARAMS" + "_" + self.tm + "_" + str(
                 self.rnd) + ".msgpack"
+
             self.paramFile = open(self.parmsFileName, 'wb')
 
-            output_params = {"-vcodec": "libx264", "-crf": 0, "-preset": "slow"}
-
             # Define writer with defined parameters and suitable output filename for e.g. `Output.mp4`
-            self.vid_filename = self.temp_save + "/" + "Video.avi"
+            self.vid_filename = self.sessionDir + "/" + "Video.avi"
 
             if self.res_s:
-                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'FFV1'), self.fps_val,
+                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'XVID'), self.fps_val,
                                                  ((864, 736)))
             else:
-                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'FFV1'), self.fps_val,
+                self.cv_writer = cv2.VideoWriter(self.vid_filename, cv2.VideoWriter_fourcc(*'XVID'), self.fps_val,
                                                  ((432, 368)))
 
             try:
                 if self.calibPlot:
-                    file = open(self.temp_save + "/" + "CALIBDATA" + "_" + self.tm + "_" +
+                    file = open(self.sessionDir + "/" + "CALIBDATA" + "_" + self.tm + "_" +
                                 str(self.rnd) + ".pickle", "wb")
                     pickle.dump(self.calibOrg, file)
                     pickle.dump(self.calibRotM, file)
@@ -794,13 +789,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 pass
 
         self.commonName = self.pFileName + " " + self.tM + " " + str(self.rnd)
-        self.depthfilename = self.temp_save + "/" + "DEPTH" + "_" + self.tm + "_" + str(
+        self.depthfilename = self.sessionDir + "/" + "DEPTH" + "_" + self.tm + "_" + str(
             self.rnd) + "_" + str(fileCounter) + ".msgpack"
-        self.colourfilename = self.temp_save + "/" + "COLOUR" + "_" + self.tm + "_" + str(
+        self.colourfilename = self.sessionDir + "/" + "COLOUR" + "_" + self.tm + "_" + str(
             self.rnd) + "_" + str(fileCounter) + ".msgpack"
         self.depthfile = open(self.depthfilename, 'wb')
         self.colourfile = open(self.colourfilename, 'wb')
-        # print(self.depthfilename)
+
         print(f"creating files {fileCounter}")
 
     def readFrame(self, progress_callback):
@@ -871,7 +866,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.fileCounter = self.fileCounter + 1
                     self.colourfile.close()
                     self.depthfile.close()
-                    self.createFile(self.fileCounter)
+                    # self.createFile(self.fileCounter)
                     self.createFile(self.fileCounter)
                     self.counter = 1
 
