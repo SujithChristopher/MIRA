@@ -1,13 +1,10 @@
 import sys
-# sys.path.insert(0, ".//include")
-# sys.path.insert(1, ".//support_py")
 import os
 import pickle
 import msgpack as mp
 import msgpack_numpy as mpn
 
 import shutil
-import subprocess
 import time
 from datetime import date
 from datetime import datetime
@@ -16,6 +13,9 @@ import cv2
 import fpstimer
 import numpy as np
 import pandas as pd
+
+"""pyside modules"""
+
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
