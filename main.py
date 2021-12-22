@@ -95,7 +95,7 @@ kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
 
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
 
-
+""""This function packs color, depth, and timeframes and save them in MSGPACK format"""
 def saveFrames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfile, selection):
     depthframesaveformat = np.copy(np.ctypeslib.as_array(depthImg, shape=(
         kinect._depth_frame_data_capacity.value,)))  # TODO Figure out how to solve intermittent up to 3cm differences
@@ -110,7 +110,7 @@ def saveFrames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfil
     p_packed = mp.packb(prm)
     paramsfile.write(p_packed)
 
-
+""""initializigin pysignals for communicating between threads"""
 class WorkerSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
@@ -118,7 +118,7 @@ class WorkerSignals(QObject):
     progress = pyqtSignal(QImage)
     changePixmap = pyqtSignal(QImage)
 
-
+""""threadding class"""
 class Worker(QRunnable):
 
     def __init__(self, fn, *args, **kwargs):
@@ -163,7 +163,7 @@ def append_new_line(file_name, text_to_append):
         # Append text at the end of file
         file_object.write(text_to_append)
 
-
+"""Main program"""
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     xyRectPos = pyqtSignal(int)
     imageStatus = pyqtSignal(str)
@@ -796,7 +796,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.colourfile = open(self.colourfilename, 'wb')
 
         print(f"creating files {fileCounter}")
-
+        
+        
+    """main function for read, disp, save camera frames"""
     def readFrame(self, progress_callback):
 
         if self.fx_roi:
