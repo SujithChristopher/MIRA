@@ -11,6 +11,4 @@ def curvy_buttons(self):
     
     self.chooseRoi.setStyleSheet("border-radius : 20;border : 2px solid black")
     # self.chooseRoi.setStyleSheet("border-radius : 20;border : 2px solid black")
-    
-    
     pass
