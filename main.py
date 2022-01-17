@@ -32,6 +32,7 @@ from pykinect2 import PyKinectRuntime
 
 from support_py import timeset
 from support_py.color_py import initialize_color
+from support_py.color_py import curvy_buttons
 from guiDesignV3 import Ui_MainWindow
 from support_py.support import get_clickedtask
 from support_py.support import get_calCalibData
@@ -224,6 +225,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         db_create(self)
         initialize_color(self)
+        curvy_buttons(self)
         self.res_s = False
         self.temp_dir = temp_dir
         self.temp_save = ""
