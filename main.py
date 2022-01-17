@@ -813,6 +813,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             yRes = self.yRes
             xRes = self.xRes
 
+
+
         self.counter = 1
         self.fileCounter = 1
 
