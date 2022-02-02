@@ -446,8 +446,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.statusBar().showMessage("Error: " + self.mediaPlayer.errorString())
 
     def initializeIMU(self):
-        a1 = timeset.IMU_Watch().set_time()
-        self.statusBar().showMessage(a1)
+        """setting time on IMU watch for old sparkfun borads"""
+        # a1 = timeset.IMU_Watch().set_time()
+        # self.statusBar().showMessage(a1)
+        
+        """this IMU is from nano 33 ble/iot"""
+        
         pass
 
     def select_task(self, event):
