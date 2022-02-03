@@ -69,7 +69,7 @@ class NanoIMUBLEClient(object):
         print('Looking for Peripheral Device...')
         devices = await discover()
         for d in devices:
-            if 'Arduino Nano 33 BLE Sense'in d.name:
+            if 'BLE IMU LEFT'in d.name:
                 self._found = True
                 self._device = d
                 sys.stdout.write(f'Found Peripheral Device {self._device.address}. ')

@@ -21,12 +21,10 @@ import threading
 L_IMU_UUID = '13012F01-F8C3-4F4A-A8F4-15CD926DA146'
 R_IMU_UUID = '13012F05-F8C3-4F4A-A8F4-15CD926DA146'
 
-imu_device = 0
-
 # Class for handling BLE communication with a Nano board for receiving IMU data.
 class NanoIMUBLEClient(object):
     
-    def __init__(self, uuid:str, csvout:bool=False) -> None:
+    def __init__(self, uuid:str, device_no:int, csvout:bool=False) -> None:
         super().__init__()
         self._client = None
         self._device = None
@@ -40,7 +38,7 @@ class NanoIMUBLEClient(object):
         self._csvout = csvout 
         self.newdata = False
         self.printdata = True
-        self._imu = imu_device
+        self._imu = device_no
     
     @property
     def connected(self) -> bool:
@@ -153,7 +151,7 @@ class NanoIMUBLEClient(object):
 
 async def run_imu_left():
             
-    imu_client_left = NanoIMUBLEClient(L_IMU_UUID, 1)
+    imu_client_left = NanoIMUBLEClient(L_IMU_UUID, device_no = 1)
     await imu_client_left.connect()
 
 #intermediate callback to execure async funciton    
@@ -168,7 +166,7 @@ def between_callback_left():
 async def run_imu_right():
     # Create a new IMU client.
     
-    imu_client_right = NanoIMUBLEClient(R_IMU_UUID, 2)
+    imu_client_right = NanoIMUBLEClient(R_IMU_UUID, device_no = 2)
     await imu_client_right.connect()
 
 #intermediate callback to execure async funciton    
