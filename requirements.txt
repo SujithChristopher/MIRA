@@ -8,3 +8,4 @@ msgpack-numpy
 opencv-python
 fpstimer
 pyserial
+pandas

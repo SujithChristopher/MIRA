@@ -13,6 +13,7 @@ import cv2
 import fpstimer
 import numpy as np
 import pandas as pd
+import subprocess
 
 """pyside modules"""
 
@@ -41,6 +42,11 @@ from support_py.support import save_patient_details
 from support_py.support import db_fetch
 from support_py.support import db_remove_all
 from support_py.support import db_p_select
+
+"""IMU libraries and functions"""
+import nano_imu.imu_2nos as imu
+# from nano_imu.imu_2nos import start_imu_service
+import asyncio
 
 """importing settings and creating folders"""
 
@@ -429,6 +435,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.vid_play.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPlay))
+            
 
     def positionChanged(self, position):
         self.vid_slider.setValue(position)
@@ -451,6 +458,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.statusBar().showMessage(a1)
         
         """this IMU is from nano 33 ble/iot"""
+        if self.sessionDir:
+            p = subprocess.Popen(['python', './/nano_imu//imu_2nos.py', "-p", self.sessionDir])
+        else:
+            print("please select patient dir")
+        # p.kill()
         
         pass
 

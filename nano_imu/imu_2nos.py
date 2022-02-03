@@ -15,7 +15,8 @@ import bleak
 from bleak import BleakClient
 from bleak import discover
 import threading
-
+from datetime import datetime
+import getopt
 # These values have been randomly generated - they must match between the Central and Peripheral devices
 # Any changes you make here must be suitably made in the Arduino program as well
 L_IMU_UUID = '13012F01-F8C3-4F4A-A8F4-15CD926DA146'
@@ -24,7 +25,7 @@ R_IMU_UUID = '13012F05-F8C3-4F4A-A8F4-15CD926DA146'
 # Class for handling BLE communication with a Nano board for receiving IMU data.
 class NanoIMUBLEClient(object):
     
-    def __init__(self, uuid:str, device_no:int, csvout:bool=False) -> None:
+    def __init__(self, uuid:str, device_no:int, csvout:bool=False, csvpth="",trigger:bool = True) -> None:
         super().__init__()
         self._client = None
         self._device = None
@@ -39,6 +40,9 @@ class NanoIMUBLEClient(object):
         self.newdata = False
         self.printdata = True
         self._imu = device_no
+        self._trigger = trigger
+        self._csvpath = csvpth+"//"+str(device_no)+"_imu.csv"
+        print(self._csvpath)
     
     @property
     def connected(self) -> bool:
@@ -128,7 +132,8 @@ class NanoIMUBLEClient(object):
     
     def print_newdata(self) -> None:
         if self._csvout:
-            _str = (f"{self.data['time']/1000000.0:+3.3f}, " +
+            _str = (f"{datetime.now()}, " +
+                    f"{self.data['time']/1000000.0:+3.3f}, " +
                     f"{self.data['ax']:+1.3f}, " + 
                     f"{self.data['ay']:+1.3f}, " + 
                     f"{self.data['az']:+1.3f}, " +
@@ -149,32 +154,32 @@ class NanoIMUBLEClient(object):
         sys.stdout.flush()
 
 
-async def run_imu_left():
+async def run_imu_left(filepath):
             
-    imu_client_left = NanoIMUBLEClient(L_IMU_UUID, device_no = 1)
+    imu_client_left = NanoIMUBLEClient(L_IMU_UUID, device_no = 1, csvpth=filepath)
     await imu_client_left.connect()
 
 #intermediate callback to execure async funciton    
-def between_callback_left():
-    
+def between_callback_left(filepath):
+    print(*args)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(run_imu_left())
+    loop.run_until_complete(run_imu_left(filepath))
     loop.close()
     
-async def run_imu_right():
+async def run_imu_right(filepath):
     # Create a new IMU client.
     
-    imu_client_right = NanoIMUBLEClient(R_IMU_UUID, device_no = 2)
+    imu_client_right = NanoIMUBLEClient(R_IMU_UUID, device_no = 2, csvpth=filepath)
     await imu_client_right.connect()
 
 #intermediate callback to execure async funciton    
-def between_callback_right():
+def between_callback_right(filepath):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    loop.run_until_complete(run_imu_right())
+    loop.run_until_complete(run_imu_right(filepath))
     loop.close()
 
 def start_imu_service():        
@@ -194,10 +199,13 @@ def start_imu_service():
 if __name__ == "__main__":
     # First create an object
     
-    loop = asyncio.get_event_loop()
-        
-    t1 = threading.Thread(target=between_callback_left)
-    t2 = threading.Thread(target=between_callback_right)
+    opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
+
+    print(opts[0])
+    _filepath = opts[0][1]
+            
+    t1 = threading.Thread(target=between_callback_left, args=(_filepath,))
+    t2 = threading.Thread(target=between_callback_right, args=(_filepath,))
   
     # starting thread 1
     t1.start()
@@ -208,13 +216,3 @@ if __name__ == "__main__":
     t1.join()
     # wait until thread 2 is completely executed
     t2.join()
-    
-    
-    # loop = asyncio.get_event_loop()
-    # try:
-    #     loop.run_until_complete(run())
-    #     print("sdgdsag")
-    # except KeyboardInterrupt:
-    #     print('\nReceived Keyboard Interrupt')
-    # finally:
-    #     print('Program finished')
