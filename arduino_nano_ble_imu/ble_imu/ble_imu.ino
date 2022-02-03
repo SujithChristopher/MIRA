@@ -10,9 +10,9 @@
 // These UUIDs have been randomly generated. - they must match between the Central and Peripheral devices
 // Any changes you make here must be suitably made in the Python program as well
 
-BLEService nanoIMUService("13012F00-F8C3-4F4A-A8F4-15CD926DA146"); // BLE Service
+BLEService nanoIMUService("13012F04-F8C3-4F4A-A8F4-15CD926DA146"); // BLE Service
 // Accelerometer and Gyroscope characteristics
-BLECharacteristic acclGyroCharacteristic("13012F01-F8C3-4F4A-A8F4-15CD926DA146", BLENotify, 28);
+BLECharacteristic acclGyroCharacteristic("13012F05-F8C3-4F4A-A8F4-15CD926DA146", BLENotify, 28);
 
 // IMU data packet
 typedef union {
@@ -47,7 +47,7 @@ void setup() {
   }
 
   // set advertised local name and service UUID:
-  BLE.setLocalName("Arduino Nano 33 BLE Sense");
+  BLE.setLocalName("BLE IMU RIGHT");
   BLE.setAdvertisedService(nanoIMUService);
 
   // add the characteristic to the service
