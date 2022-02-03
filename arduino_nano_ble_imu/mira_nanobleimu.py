@@ -14,11 +14,14 @@ import keyboard
 import bleak
 from bleak import BleakClient
 from bleak import discover
-
+import threading
 
 # These values have been randomly generated - they must match between the Central and Peripheral devices
 # Any changes you make here must be suitably made in the Arduino program as well
-IMU_UUID = '13012F01-F8C3-4F4A-A8F4-15CD926DA146'
+L_IMU_UUID = '13012F01-F8C3-4F4A-A8F4-15CD926DA146'
+R_IMU_UUID = '13012F05-F8C3-4F4A-A8F4-15CD926DA146'
+
+imu_device = 0
 
 # Class for handling BLE communication with a Nano board for receiving IMU data.
 class NanoIMUBLEClient(object):
@@ -37,6 +40,7 @@ class NanoIMUBLEClient(object):
         self._csvout = csvout 
         self.newdata = False
         self.printdata = True
+        self._imu = imu_device
     
     @property
     def connected(self) -> bool:
@@ -67,11 +71,18 @@ class NanoIMUBLEClient(object):
         print('Looking for Peripheral Device...')
         devices = await discover()
         for d in devices:
-            if 'Arduino Nano 33 BLE Sense'in d.name:
-                self._found = True
-                self._device = d
-                sys.stdout.write(f'Found Peripheral Device {self._device.address}. ')
-                break
+            if self._imu == 1:
+                if 'BLE IMU LEFT'in d.name:
+                    self._found = True
+                    self._device = d
+                    sys.stdout.write(f'Found Peripheral Device {self._device.address}. ')
+                    break
+            if self._imu == 2:
+                if 'BLE IMU RIGHT'in d.name:
+                    self._found = True
+                    self._device = d
+                    sys.stdout.write(f'Found Peripheral Device {self._device.address}. ')
+                    break
         
         # Connect and do stuff.
         async with BleakClient(d.address) as self._client:
@@ -140,19 +151,72 @@ class NanoIMUBLEClient(object):
         sys.stdout.flush()
 
 
-async def run():
-    # Create a new IMU client.
-    imu_client = NanoIMUBLEClient(IMU_UUID, False)
-    await imu_client.connect()
+async def run_imu_left():
+            
+    imu_client_left = NanoIMUBLEClient(L_IMU_UUID, 1)
+    await imu_client_left.connect()
 
+#intermediate callback to execure async funciton    
+def between_callback_left():
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(run_imu_left())
+    loop.close()
+    
+async def run_imu_right():
+    # Create a new IMU client.
+    
+    imu_client_right = NanoIMUBLEClient(R_IMU_UUID, 2)
+    await imu_client_right.connect()
+
+#intermediate callback to execure async funciton    
+def between_callback_right():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(run_imu_right())
+    loop.close()
+
+def start_imu_service():        
+    t1 = threading.Thread(target=between_callback_left)
+    t2 = threading.Thread(target=between_callback_right)
+  
+    # starting thread 1
+    t1.start()
+    # starting thread 2
+    t2.start()
+  
+    # wait until thread 1 is completely executed
+    t1.join()
+    # wait until thread 2 is completely executed
+    t2.join()
 
 if __name__ == "__main__":
     # First create an object
+    
     loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(run())
-        print("sdgdsag")
-    except KeyboardInterrupt:
-        print('\nReceived Keyboard Interrupt')
-    finally:
-        print('Program finished')
+        
+    t1 = threading.Thread(target=between_callback_left)
+    t2 = threading.Thread(target=between_callback_right)
+  
+    # starting thread 1
+    t1.start()
+    # starting thread 2
+    t2.start()
+  
+    # wait until thread 1 is completely executed
+    t1.join()
+    # wait until thread 2 is completely executed
+    t2.join()
+    
+    
+    # loop = asyncio.get_event_loop()
+    # try:
+    #     loop.run_until_complete(run())
+    #     print("sdgdsag")
+    # except KeyboardInterrupt:
+    #     print('\nReceived Keyboard Interrupt')
+    # finally:
+    #     print('Program finished')
