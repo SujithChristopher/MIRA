@@ -240,6 +240,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Fixed roi parameters
         """
         self.fx_roi = False
+        self.imu_trigger = True
 
     def keyboard_events(self, event):
         if event.key() == Qt.Key_Escape:
@@ -456,15 +457,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """setting time on IMU watch for old sparkfun borads"""
         # a1 = timeset.IMU_Watch().set_time()
         # self.statusBar().showMessage(a1)
+        if self.imu_trigger:
+            self.imu_trigger = False
         
-        """this IMU is from nano 33 ble/iot"""
-        if self.sessionDir:
-            p = subprocess.Popen(['python', './/nano_imu//imu_2nos.py', "-p", self.sessionDir])
+            """this IMU is from nano 33 ble/iot"""
+            if self.sessionDir:
+                self._imu_p = subprocess.Popen(['python', './/nano_imu//imu_2nos.py', "-p", self.sessionDir])
+            else:
+                print("please select patient dir")
         else:
-            print("please select patient dir")
-        # p.kill()
-        
-        pass
+            print("stopping imu recording")
+            self._imu_p.terminate()
+            print("imu recording stopped")
+            
 
     def select_task(self, event):
         print(get_clickedtask(self))
