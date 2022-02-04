@@ -25,7 +25,7 @@ R_IMU_UUID = '13012F05-F8C3-4F4A-A8F4-15CD926DA146'
 # Class for handling BLE communication with a Nano board for receiving IMU data.
 class NanoIMUBLEClient(object):
     
-    def __init__(self, uuid:str, device_no:int, csvout:bool=False, csvpth="",trigger:bool = True) -> None:
+    def __init__(self, uuid:str, device_no:int, csvout:bool=True, csvpth="",trigger:bool = True) -> None:
         super().__init__()
         self._client = None
         self._device = None
@@ -43,6 +43,12 @@ class NanoIMUBLEClient(object):
         self._trigger = trigger
         self._csvpath = csvpth+"//"+str(device_no)+"_imu.csv"
         print(self._csvpath)
+        
+        if self._csvout and self._csvpath:
+            self._csv_file = open(self._csvpath, 'w')
+            self._csv = csv.writer(self._csv_file)
+            self._csv.writerow(["sys_time","imu_time","ax", "ay", "az", "gx", "gy", "gz"])
+            
     
     @property
     def connected(self) -> bool:
@@ -132,14 +138,18 @@ class NanoIMUBLEClient(object):
     
     def print_newdata(self) -> None:
         if self._csvout:
-            _str = (f"{datetime.now()}, " +
+            nw = datetime.now()
+            _str = (f"{str(nw)}, " +
                     f"{self.data['time']/1000000.0:+3.3f}, " +
+                    
                     f"{self.data['ax']:+1.3f}, " + 
                     f"{self.data['ay']:+1.3f}, " + 
                     f"{self.data['az']:+1.3f}, " +
                     f"{self.data['gx']:+3.3f}, " +
                     f"{self.data['gy']:+3.3f}, " +
                     f"{self.data['gz']:+3.3f}\n")
+            nw = datetime.now()
+            self._csv.writerow([str(nw), self.data["time"]/1000000, self.data['ax'], self.data['ay'], self.data['az'] , self.data['gx'] , self.data['gy'] , self.data['gz']])
         else:
             _str = (f"\r Time: {self.data['time']/1000000.0:+3.3f} | " +
                     "Accl: " +
