@@ -138,6 +138,9 @@ class NanoIMUBLEClient(object):
                     f"{self.data['gx']:+3.3f}, " +
                     f"{self.data['gy']:+3.3f}, " +
                     f"{self.data['gz']:+3.3f}")
+        if keyboard.is_pressed("e"):
+            self.disconnect()
+            print("disconnected")
         sys.stdout.write(_str)
         sys.stdout.flush()
 
