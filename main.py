@@ -47,6 +47,7 @@ from support_py.support import db_p_select
 import nano_imu.imu_2nos as imu
 # from nano_imu.imu_2nos import start_imu_service
 import asyncio
+from nano_imu.classic_imu_py import reading_imu_data as classic_imu
 
 """importing settings and creating folders"""
 
