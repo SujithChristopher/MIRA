@@ -462,10 +462,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.imu_trigger = False
         
             """this IMU is from nano 33 ble/iot"""
-            if self.sessionDir:
-                self._imu_p = subprocess.Popen(['python', './/nano_imu//imu_2nos.py', "-p", self.sessionDir])
-            else:
-                print("please select patient dir")
+            # if self.sessionDir:
+            #     self._imu_p = subprocess.Popen(['python', './/nano_imu//imu_2nos.py', "-p", self.sessionDir])
+            # else:
+            #     print("please select patient dir")
+                
+                
+            """This is for IMU with classic bluetooth"""
+            
+            # myport = classic_imu.SerialPort("COM15", 115200)
+            
+            # worker = Worker(myport.run_program)  # Any other args, kwargs are passed to the run function
+            # worker.signals.progress.connect(self.do_nothing)
+            # worker.signals.finished.connect(self.thread_complete)
+            # worker.signals.result.connect(self.thread_complete)
+            # self.threadpool.start(worker)
+            print("initializing, please wait")
+            
+            self._imu_p = subprocess.Popen(['python', './/nano_imu//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
+            # if self.sessionDir:
+            #     self._imu_p = subprocess.Popen(['python', './/nano_imu//classic_imu_py//reading_imu_data.py'])
+            # else:
+            #     self._imu_p = subprocess.Popen(['python', './/nano_imu//classic_imu_py//reading_imu_data.py'])
+            #     print("please select patient dir")
         else:
             print("stopping imu recording")
             self._imu_p.terminate()
