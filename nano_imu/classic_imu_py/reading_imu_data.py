@@ -1,30 +1,36 @@
+"""This program is for recording IMU data, through HC05 bluetooth module"""
 
-from numpy.core.defchararray import array
 import serial
 import struct
-import numpy as np
-import matplotlib.pyplot as plt
 import keyboard
 import csv
 from datetime import datetime
-
-
+import sys
+from sys import stdout
+import getopt
 
 class SerialPort(object):
     # Contains functions that enable communication between the docking station and the IMU watches
 
 
-    def __init__(self, serialport, serialrate=9600):
+    def __init__(self, serialport, serialrate=9600, csv_path="", csv_enable=False):
         # Initialise serial payload
         self.count = 0
         self.plSz = 0
         self.payload = bytearray()
 
         self.serialport = serialport
-        self.ser = serial.Serial(serialport, serialrate)
-        self.csv_file = open("hc05_transmission.csv", "w")
-        self.csv = csv.writer(self.csv_file)
-        self.csv.writerow(["sys_time", "ax", "ay", "ax", "gx", "gy", "gz"])
+        self.ser_port = serial.Serial(serialport, serialrate)
+        
+        self.csv_enabled = csv_enable
+        if csv_enable:
+            self.csv_file = open(csv_path + "//imu01.csv", "w")
+            self.csv = csv.writer(self.csv_file)
+            self.csv.writerow(["sys_time", "ax", "ay", "ax", "gx", "gy", "gz"])
+        self.triggered = True
+        self.connected = False
+        
+        stdout.write("Initialized imu program\n")
 
         
     def serial_write(self, payload):
@@ -33,58 +39,69 @@ class SerialPort(object):
 
         header = [255, 255]
         chksum = 254
-
         payload_size = len(payload) + 1
-
-        chksum += payload_size 
-
-        self.ser.write(bytes([header[0]]))
-        self.ser.write(bytes([header[1]]))
-        self.ser.write(bytes([payload_size]))
-
-        self.ser.write(bytes([payload]))
-
+        chksum += payload_size
         
-        self.ser.write(bytes([chksum % 256]))
+        self.ser_port.write(bytes([header[0]]))
+        self.ser_port.write(bytes([header[1]]))
+        self.ser_port.write(bytes([payload_size]))
+        self.ser_port.write(bytes([payload]))       
+        self.ser_port.write(bytes([chksum % 256]))
 
     def serial_read(self):
-        
+        """returns bool for valid read, also returns the data read"""
        
-        if (self.ser.read() == b'\xff') and (self.ser.read() == b'\xff'):
+        if (self.ser_port.read() == b'\xff') and (self.ser_port.read() == b'\xff'):
+            self.connected = True
             
-            self.count += 1
-            
-            print(self.count)
             chksum = 255 + 255
-
-            self.plSz = self.ser.read()[0]
-            
+            self.plSz = self.ser_port.read()[0]            
             chksum += self.plSz
-
-            self.payload = self.ser.read(self.plSz - 1)
+            self.payload = self.ser_port.read(self.plSz - 1)
            
             chksum += sum(self.payload)
             chksum = bytes([chksum % 256])
-            _chksum = self.ser.read()
+            _chksum = self.ser_port.read()
 
             return _chksum == chksum
         return False
     
-    def myfun(self):
+    def disconnect(self):
+        stdout.write("disconnected\n")
+        
+    
+    def run_program(self):
         while 1:
             if self.serial_read():
                 val = struct.unpack("6f", self.payload)
                 nw = datetime.now()
-                self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], val[4], val[5]])
+                if self.csv_enabled:    
+                    self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], val[4], val[5]])
                 if keyboard.is_pressed("e"):
                     self.csv_file.close()
                     break
                 
-
-                # print(val)
+            # if self.triggered and not self.connected:
+            #     self.disconnect()
+            #     break
+                _str = ("Accl: " +
+                        f"{val[0]:+1.3f}, " + 
+                        f"{val[1]:+1.3f}, " + 
+                        f"{val[2]:+1.3f} | " +
+                        "Gyro: " +
+                        f"{val[3]:+3.3f}, " +
+                        f"{val[4]:+3.3f}, " +
+                        f"{val[5]:+3.3f}")
+                # stdout.write(_str)
+                # stdout.flush()
             
     
+if __name__ == '__main__':
+    
+    opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
 
+    print(opts[0])
+    _filepath = opts[0][1]
 
-myport = SerialPort("COM15", 115200)
-myport.myfun()
+    myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
+    myport.run_program()
