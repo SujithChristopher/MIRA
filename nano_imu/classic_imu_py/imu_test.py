@@ -96,6 +96,7 @@ class SerialPort(object):
                 if self.csv_enabled:
                     self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], val[4], val[5], dt_time, time_delta[0]])
                 if keyboard.is_pressed("e"):
+
                     self.csv_file.close()
                     break
 
