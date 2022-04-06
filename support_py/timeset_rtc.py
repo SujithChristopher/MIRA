@@ -1,3 +1,5 @@
+import time
+
 from numpy import byte
 import serial
 import serial.tools.list_ports
@@ -59,7 +61,7 @@ class IMU_Watch(object):
                 self.ser.write(byte([ord(value)]))
                 # print("count num", count)
                 chksum += 1
-                print("this is chksum", chksum)
+                # print("this is chksum", chksum)
         chksum += 1
         print("this is chksum", [chksum])
         self.ser.write(bytes([chksum % 256]))
@@ -93,17 +95,24 @@ class IMU_Watch(object):
         t_list = list(d_tuple)
         t_string = ''.join([str(elem) for elem in t_list])
 
+        # self.serial_write(t_string)
+        time.sleep(1)
         self.serial_write(t_string)
         # self.statusBar().showMessage("Initialized IMU watch")
         print('Command sent: SETTIME - ', t_string)
-        c = 0
-        stp = None
+
         while True:
             # if self.ser.available():
-            if self.serial_read():
-                print(self.payload)
+            # if self.ser.read() is not b'\x00':
 
-                print("available")
+            # if self.serial_read():
+            #     print(self.payload)
+            #     print("available")
+            # self.serial_write(t_string)
+            # a = chr(int.from_bytes(self.ser.read(), byteorder='little'))
+
+            a = int.from_bytes(self.ser.read(), byteorder='little')
+            print(a)
 
             # if c < 2:
             #     a = int.from_bytes(self.ser.read(), byteorder='little')
@@ -123,7 +132,6 @@ class IMU_Watch(object):
             #     b = chr(int.from_bytes(self.ser.read(), byteorder='little'))
             #     print(b, c)
             # c += 1
-
 
             # unix = int(self.payload.decode('utf-8'))
 
