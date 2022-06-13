@@ -76,7 +76,7 @@ class SerialPort(object):
 
             # print("hi there", i)
             # print(self.ser_port.read())
-            print(self.ser_port.read())
+            # print(self.ser_port.read())
             if self.serial_read():
 
                 val = struct.unpack("4l", self.payload)
