@@ -84,7 +84,7 @@ class SerialPort(object):
 
                 # mils = struct.unpack("L", self.payload[30:])
 
-                # imu_time = str(time_delta[0]) + ":" + str(time_delta[1]) + ":" + str(time_delta[2])
+                # imu_time = str(time_delta[0]) + ":" + str(time_delta[1]) + ":" + str(time_delta[2])dsf
 
                 print(val)
                 nw = None
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # _filepath = opts[0][1]
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
-    myport = SerialPort("COM4", 115200, csv_path="wheel_cart_teensy_2.csv", csv_enable=True)
+    myport = SerialPort("COM4", 115200, csv_path="straight_line.csv", csv_enable=True)
     # myport = SerialPort("COM12", 9600)
     myport.run_program()
 
