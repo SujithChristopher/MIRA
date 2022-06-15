@@ -19,8 +19,8 @@ def read_df_csv(filename, offset=2):
 
     pth = filename
     raw = pd.read_csv(pth)
-    cols_list = raw.columns
-    inx = [i for i, x in enumerate(cols_list) if x == "Capture Start Time"]  # => [1, 3]
+    cols_list = raw.columns     # first row which contains capture start time
+    inx = [i for i, x in enumerate(cols_list) if x == "Capture Start Time"]
     st_time = cols_list[inx[0] + 1]
     st_time = datetime.strptime(st_time, "%Y-%m-%d %I.%M.%S.%f %p")  # returns datetime object
 
