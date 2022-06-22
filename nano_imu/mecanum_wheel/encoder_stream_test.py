@@ -29,7 +29,7 @@ class SerialPort(object):
             # self.csv_file = open(csv_path + "//imu01.csv", "w")
             self.csv_file = open(csv_path, "w")
             self.csv = csv.writer(self.csv_file)
-            self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc"])
+            self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc", "mils", "sync"])
         self.triggered = True
         self.connected = False
 
@@ -81,21 +81,25 @@ class SerialPort(object):
                 # print(len(self.payload))
 
                 val = struct.unpack("4l", self.payload[:16])    # encoder values
-                _rtc = struct.unpack("Q", self.payload[16:])    # rtc values time delta
+                _rtc = struct.unpack("Q", self.payload[16:24])    # rtc values time delta
+                mils = struct.unpack("L", self.payload[24:28])
+                _sync = struct.unpack("c", self.payload[28:29])[0].decode("utf-8")
+
+                print(_sync)
 
                 _rtcval = datetime.fromtimestamp(_rtc[0]).strftime("%Y-%m-%d %I.%M.%S.%f %p")
 
                 # # time_delta = struct.unpack("3H", self.payload[24:30])
 
 
-                print(val, _rtc)
+                # print(val, _rtc)
                 nw = None
 
                 if not nw:
                     nw = datetime.now()     # datetime
 
                 if self.csv_enabled:
-                    self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], _rtcval])
+                    self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], _rtcval, mils[0], _sync])
                 if keyboard.is_pressed("e"):
                     self.csv_file.close()
                     break
@@ -111,7 +115,7 @@ if __name__ == '__main__':
     # _filepath = opts[0][1]
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
-    myport = SerialPort("COM4", 115200, csv_path="test.csv", csv_enable=True)
+    myport = SerialPort("COM4", 115200, csv_path="sync_test.csv", csv_enable=True)
     # myport = SerialPort("COM4", 115200)
     myport.run_program()
 
