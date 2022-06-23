@@ -44,10 +44,10 @@ from support_py.support import db_remove_all
 from support_py.support import db_p_select
 
 """IMU libraries and functions"""
-import nano_imu.imu_2nos as imu
-# from nano_imu.imu_2nos import start_imu_service
+import imu_services.imu_2nos as imu
+# from imu_services.imu_2nos import start_imu_service
 import asyncio
-from nano_imu.classic_imu_py import reading_imu_data as classic_imu
+from imu_services.classic_imu_py import reading_imu_data as classic_imu
 
 """importing settings and creating folders"""
 
@@ -463,7 +463,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
             """this IMU is from nano 33 ble/iot"""
             # if self.sessionDir:
-            #     self._imu_p = subprocess.Popen(['python', './/nano_imu//imu_2nos.py', "-p", self.sessionDir])
+            #     self._imu_p = subprocess.Popen(['python', './/imu_services//imu_2nos.py', "-p", self.sessionDir])
             # else:
             #     print("please select patient dir")
                 
@@ -479,11 +479,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # self.threadpool.start(worker)
             print("initializing, please wait")
             
-            self._imu_p = subprocess.Popen(['python', './/nano_imu//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
+            self._imu_p = subprocess.Popen(['python', './/imu_services//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
             # if self.sessionDir:
-            #     self._imu_p = subprocess.Popen(['python', './/nano_imu//classic_imu_py//reading_imu_data.py'])
+            #     self._imu_p = subprocess.Popen(['python', './/imu_services//classic_imu_py//reading_imu_data.py'])
             # else:
-            #     self._imu_p = subprocess.Popen(['python', './/nano_imu//classic_imu_py//reading_imu_data.py'])
+            #     self._imu_p = subprocess.Popen(['python', './/imu_services//classic_imu_py//reading_imu_data.py'])
             #     print("please select patient dir")
         else:
             print("stopping imu recording")
