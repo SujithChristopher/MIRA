@@ -15,7 +15,6 @@ def read_df_csv(filename, offset=2):
 
     """
 
-    # marker_no = 3 #number of markers in tracking data
     # offset = 2 #first two columns with frame_no and time
 
     pth = filename
@@ -57,6 +56,7 @@ def add_datetime_col(df, _time, _name):
     for i in list(df[_name]):
         _t.append(_time + timedelta(0,float(i)))
     df["time"] = _t
+    df[""]
 
     return df
     
