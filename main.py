@@ -34,7 +34,7 @@ from pykinect2 import PyKinectRuntime
 from support_py import timeset
 from support_py.color_py import initialize_color
 from support_py.color_py import curvy_buttons
-from guiDesignV3 import Ui_MainWindow
+from guiDesign import Ui_MainWindow
 from support_py.support import get_clickedtask
 from support_py.support import get_calCalibData
 
