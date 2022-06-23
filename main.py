@@ -43,6 +43,9 @@ from support_py.support import db_fetch
 from support_py.support import db_remove_all
 from support_py.support import db_p_select
 
+from support_py.button_init import initialize_buttons
+from support_py.parameter_init import initialize_parameters
+
 """IMU libraries and functions"""
 import imu_services.imu_2nos as imu
 # from imu_services.imu_2nos import start_imu_service
@@ -104,7 +107,9 @@ kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
 kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
 
 """"This function packs color, depth, and timeframes and save them in MSGPACK format"""
-def saveFrames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfile, selection):
+
+
+def save_frames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfile, selection):
     depthframesaveformat = np.copy(np.ctypeslib.as_array(depthImg, shape=(
         kinect._depth_frame_data_capacity.value,)))  # TODO Figure out how to solve intermittent up to 3cm differences
 
@@ -118,7 +123,10 @@ def saveFrames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfil
     p_packed = mp.packb(prm)
     paramsfile.write(p_packed)
 
+
 """"initializigin pysignals for communicating between threads"""
+
+
 class WorkerSignals(QObject):
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
@@ -126,7 +134,10 @@ class WorkerSignals(QObject):
     progress = pyqtSignal(QImage)
     changePixmap = pyqtSignal(QImage)
 
+
 """"threadding class"""
+
+
 class Worker(QRunnable):
 
     def __init__(self, fn, *args, **kwargs):
@@ -158,20 +169,9 @@ class Worker(QRunnable):
             self.signals.finished.emit()  # Done
 
 
-def append_new_line(file_name, text_to_append):
-    """Append given text as a new line at the end of file"""
-    # Open the file in append & read mode ('a+')
-    with open(file_name, "a+") as file_object:
-        # Move read cursor to the start of file.
-        file_object.seek(0)
-        # If file is not empty then append '\n'
-        data = file_object.read(100)
-        if len(data) > 0:
-            file_object.write("\n")
-        # Append text at the end of file
-        file_object.write(text_to_append)
-
 """Main program"""
+
+
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     xyRectPos = pyqtSignal(int)
     imageStatus = pyqtSignal(str)
@@ -181,36 +181,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        self.yRes = 736
-        self.xRes = 864
+        self.data_path = sett
+        self.data_saved = False
+        self.dummy_dir = ""
 
-        self.xPos = 0
-        self.yPos = 0
+        self.res_s = False
+        self.temp_dir = temp_dir
+        self.temp_save = ""
 
-        self.fps_val = 15
+        """initializing different functions"""
+        initialize_parameters(self)  # general parameters
+        initialize_buttons(self)  # button connections
+        db_create(self)  # database initialization
+        initialize_color(self)  # color or theme
+        curvy_buttons(self)  # button theme
 
-        self.setupUi(self)
-        self.poseFlag = "RECT"
-        self.dataFlag = 0
-
-        self.newSes = False
-        self.capF = False
-        self.newSesBr = False
-        self.calib = False
-
-        # self.initUI()
-        self.generalInit()
         self.acquireSingleframe()
-        self.profilePicture = None
-
         self.timerfps = fpstimer.FPSTimer(self.fps_val)
-
-        # self.chooseRoi.clicked.connect(self.acquireSingleframe)
-        self.displayLabel.mousePressEvent = self.updateRect
-        self.task_group.hide()
-        self.task_group.mousePressEvent = self.select_task
-        self.calibXYZ = []
-        self.calibXYZrs = []
 
         self.threadpool = QThreadPool()
         print("Multi-threading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -219,29 +206,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dateEdit.setDate(dt)
         self.refreshICN.setIcon(QIcon(r'src\refreshIcon.png'))
 
-        self.globDate = self.dateEdit.date()
-
-        self.statusBar().showMessage("Initialized")
-        # self.statusBar().setStyleSheet("border :3px solid black;")
-        self.statusBar().setFont(QFont('Times', 12))
-        self.calibCounter = 0
         self.keyPressEvent = self.keyboard_events
-        self.data_path = sett
-        self.data_saved = False
-        self.dummy_dir = ""
-
-        db_create(self)
-        initialize_color(self)
-        curvy_buttons(self)
-        self.res_s = False
-        self.temp_dir = temp_dir
-        self.temp_save = ""
-
-        """
-        Fixed roi parameters
-        """
-        self.fx_roi = False
-        self.imu_trigger = True
 
     def keyboard_events(self, event):
         if event.key() == Qt.Key_Escape:
@@ -263,78 +228,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             print("closing")
             self.conn.close()
             self.sconn.close()
-
-    def generalInit(self):
-
-        """
-        First Tab: Initializing buttons
-        """
-
-        self.chooseRoi.clicked.connect(self.initUI)
-        self.startRecording.setEnabled(False)
-        self.startRecording.clicked.connect(self.startRec)
-        self.stopRecording.setEnabled(False)
-        self.stopRecording.clicked.connect(self.stopRec)
-        self.saveDetails.clicked.connect(self.savePatientDetails)
-        self.browseLocation.clicked.connect(self.saveLocation)
-        self.newSession.setEnabled(False)
-        self.newSession.clicked.connect(self.newSessionFile)
-        self.discardSession.setEnabled(False)
-        self.discardSession.clicked.connect(self.discardSesFun)
-        self.saveSession.setEnabled(False)
-        self.saveSession.clicked.connect(self.saveSesFun)
-
-        self.calibrate.clicked.connect(self.calibrateFun)
-        self.selectXYZ.clicked.connect(self.selectFun)
-        self.resetXYZ.clicked.connect(self.resetXYZFun)
-        self.hi_res_set.clicked.connect(self.res_sett)
-        # roi settings
-        self.fix_roi.clicked.connect(self.fix_roifun)
-
-        if self.newSes:
-            self.chooseRoi.setEnabled(True)
-        else:
-            self.chooseRoi.setEnabled(False)
-
-        # self.uns.clicked.connect(self.select_task)
-        self.exFun.clicked.connect(self.initializeIMU)
-
-        """
-        Second Tab: Patient details
-        """
-        self.saveDetailsCapture.clicked.connect(self.capProfile)
-
-        """
-        settings tab
-        """
-        self.path_browse.clicked.connect(self.path_browse_fun)
-        self.sett_save.clicked.connect(self.sett_save_fun)
-
-        """
-        Patient directory: playing video tab
-        """
-        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
-        videoWidget = self.vid_widget
-
-        self.vid_play.clicked.connect(self.play)
-
-        self.vid_slider.setRange(0, 0)
-        self.vid_slider.sliderMoved.connect(self.setPosition)
-
-        self.errorLabel = self.statusBar
-
-        # self.vid_pause.clicked.connect(self.openFile)
-
-        self.mediaPlayer.setVideoOutput(videoWidget)
-        self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
-        self.mediaPlayer.positionChanged.connect(self.positionChanged)
-        self.mediaPlayer.durationChanged.connect(self.durationChanged)
-        self.mediaPlayer.error.connect(self.handleError)
-        # list widget
-        self.p_list_wid.itemClicked.connect(self.list_clicked)
-        self.p_ses_wid.itemClicked.connect(self.ses_clicked)
-        self.p_open.setEnabled(False)
-        self.p_open.clicked.connect(self.saveLocation_fun)
 
     def fix_roifun(self):
         if self.fix_roi.isChecked():
@@ -362,8 +255,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def path_browse_fun(self):
 
-        fname = QFileDialog.getExistingDirectory(None, 'Select a data folder:', QDir.homePath())
-        self.temp_path = fname
+        self.temp_path = QFileDialog.getExistingDirectory(None, 'Select a data folder:', QDir.homePath())
         self.statusBar().showMessage("Data path selected")
 
     def sett_save_fun(self):
@@ -437,7 +329,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.vid_play.setIcon(
                 self.style().standardIcon(QStyle.SP_MediaPlay))
-            
 
     def positionChanged(self, position):
         self.vid_slider.setValue(position)
@@ -454,32 +345,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.vid_player.setText("Error: " + self.mediaPlayer.errorString())
         self.statusBar().showMessage("Error: " + self.mediaPlayer.errorString())
 
+        """IMU function, for different purposes, this uses external trigger button"""
+
     def initializeIMU(self):
         """setting time on IMU watch for old sparkfun borads"""
         # a1 = timeset.IMU_Watch().set_time()
         # self.statusBar().showMessage(a1)
         if self.imu_trigger:
             self.imu_trigger = False
-        
+
             """this IMU is from nano 33 ble/iot"""
             # if self.sessionDir:
             #     self._imu_p = subprocess.Popen(['python', './/imu_services//imu_2nos.py', "-p", self.sessionDir])
             # else:
             #     print("please select patient dir")
-                
-                
+
             """This is for IMU with classic bluetooth"""
-            
+
             # myport = classic_imu.SerialPort("COM15", 115200)
-            
+
             # worker = Worker(myport.run_program)  # Any other args, kwargs are passed to the run function
             # worker.signals.progress.connect(self.do_nothing)
             # worker.signals.finished.connect(self.thread_complete)
             # worker.signals.result.connect(self.thread_complete)
             # self.threadpool.start(worker)
             print("initializing, please wait")
-            
-            self._imu_p = subprocess.Popen(['python', './/imu_services//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
+
+            self._imu_p = subprocess.Popen(
+                ['python', './/imu_services//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
             # if self.sessionDir:
             #     self._imu_p = subprocess.Popen(['python', './/imu_services//classic_imu_py//reading_imu_data.py'])
             # else:
@@ -489,7 +382,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             print("stopping imu recording")
             self._imu_p.terminate()
             print("imu recording stopped")
-            
 
     def select_task(self, event):
         print(get_clickedtask(self))
@@ -500,7 +392,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.selectXYZ.setText("Select 'O'")
         self.acquireSingleframe()
 
-    def selectFun(self):
+    def select_fun(self):
 
         self.calibCounter = self.calibCounter + 1
         self.calibXYZ.append((self.xPos, self.yPos))  # Store 1st position
@@ -594,7 +486,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def newSessionFile(self):
 
         self.newSesBr = True
-
         self.newSes = True
         self.generalInit()
         self.saveLocation()
@@ -602,8 +493,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def saveLocation_fun(self):
 
-        # input_dir = QFileDialog.getExistingDirectory(None, 'Select a folder:', parent)
-        # print(input_dir)
         row = self.p_list_wid.currentRow()
         db_p_select(self, row)
 
@@ -684,15 +573,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.startRecording.setEnabled(True)
         self.xy = [self.xPos * 2, self.yPos * 2]
         self.statusBar().showMessage('ROI selected')
-
-        """
-        Opening pickle files for verification
-        """
-        # fp = open(self.parmsFileName, "rb")
-        # f1 = pickle.load(fp)
-        # f2 = pickle.load(fp)
-        # print(f1)
-        # print(f2)
 
         if not self.newSes:
             worker = Worker(self.readFrame)  # Any other args, kwargs are passed to the run function
@@ -839,9 +719,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.colourfile = open(self.colourfilename, 'wb')
 
         print(f"creating files {fileCounter}")
-        
-        
+
     """main function for read, disp, save camera frames"""
+
     def readFrame(self, progress_callback):
 
         if self.fx_roi:
@@ -855,8 +735,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             xPos = self.xPos
             yRes = self.yRes
             xRes = self.xRes
-
-
 
         self.counter = 1
         self.fileCounter = 1
@@ -918,8 +796,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
                 if self.poseFlag == "REC":
                     selection = get_clickedtask(self)
-                    saveFrames(imgSaveBGR, depthFrame, timestamp, self.colourfile, self.depthfile, self.paramFile,
-                               selection)
+                    save_frames(imgSaveBGR, depthFrame, timestamp, self.colourfile, self.depthfile, self.paramFile,
+                                selection)
                     self.cv_writer.write(imgSaveBGR)
 
                     # self.vid_writer.write(imageSave, rgb_mode=True)
@@ -940,28 +818,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
                 if self.newSesBr:
                     break
-
-    def onlineSim(self, progress_callback):
-        while not self.newSes:
-            if self.dataFlag == 1:
-                try:
-                    # poseImage = poseEST(self.colorImage)
-
-                    h1, w1, ch = self.colorImage.shape
-                    bytesPerLine = ch * w1
-
-                    convertToQtFormat = QImage(self.colorImage.data.tobytes(), w1, h1, bytesPerLine,
-                                               QImage.Format_RGB888)
-                    p = convertToQtFormat.scaled(960, 540, Qt.KeepAspectRatio)
-                    progress_callback.emit(p)
-                    print("in loop")
-                    # self.dataFlag = 0
-
-                except:
-                    pass
-
-        if self.newSes:
-            return p
 
 
 if __name__ == "__main__":
