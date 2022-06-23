@@ -2,5 +2,5 @@
 __pycache__
 main.spec
 .//include//__pycache__
-.//nano_imu//__pycache__
+.//imu_services//__pycache__
 .//support_py//__pycache__
