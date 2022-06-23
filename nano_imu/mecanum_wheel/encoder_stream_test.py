@@ -115,7 +115,7 @@ if __name__ == '__main__':
     # _filepath = opts[0][1]
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
-    myport = SerialPort("COM4", 115200, csv_path="sync_test.csv", csv_enable=True)
+    myport = SerialPort("COM4", 115200, csv_path="random_movement_sync.csv", csv_enable=True)
     # myport = SerialPort("COM4", 115200)
     myport.run_program()
 
