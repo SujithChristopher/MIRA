@@ -40,7 +40,6 @@ from support_py.support import db_remove_all
 from support_py.support import db_p_select
 from support_py.support import save_patient_details
 
-
 from support_py import timeset
 from support_py.color_py import initialize_color
 from support_py.color_py import curvy_buttons
