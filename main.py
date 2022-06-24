@@ -127,7 +127,7 @@ def save_frames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfi
     paramsfile.write(p_packed)
 
 
-""""initializigin pysignals for communicating between threads"""
+""""initializing pysignals for communicating between threads"""
 
 
 class WorkerSignals(QObject):
@@ -138,7 +138,7 @@ class WorkerSignals(QObject):
     changePixmap = pyqtSignal(QImage)
 
 
-""""threadding class"""
+""""threading class"""
 
 
 class Worker(QRunnable):
