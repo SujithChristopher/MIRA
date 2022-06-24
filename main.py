@@ -12,6 +12,7 @@ import ctypes
 import cv2
 import fpstimer
 import numpy as np
+from numpy import random
 import pandas as pd
 import subprocess
 
@@ -22,26 +23,29 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import *
-from numpy import random
 
+"""this is the main design file"""
+from guiDesign import Ui_MainWindow
+
+"""importing pykinect modules"""
+from pykinect2 import PyKinectV2
+from pykinect2 import PyKinectRuntime
+
+"""importing database functions"""
 from support_py.support import db_create
 from support_py.support import db_ses_fetch
 from support_py.support import db_ses_update
+from support_py.support import db_fetch
+from support_py.support import db_remove_all
+from support_py.support import db_p_select
+from support_py.support import save_patient_details
 
-from pykinect2 import PyKinectV2
-from pykinect2 import PyKinectRuntime
 
 from support_py import timeset
 from support_py.color_py import initialize_color
 from support_py.color_py import curvy_buttons
-from guiDesign import Ui_MainWindow
 from support_py.support import get_clickedtask
 from support_py.support import get_calCalibData
-
-from support_py.support import save_patient_details
-from support_py.support import db_fetch
-from support_py.support import db_remove_all
-from support_py.support import db_p_select
 
 from support_py.button_init import initialize_buttons
 from support_py.parameter_init import initialize_parameters
