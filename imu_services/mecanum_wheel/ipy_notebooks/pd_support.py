@@ -56,8 +56,6 @@ def add_datetime_col(df, _time, _name):
     for i in list(df[_name]):
         _t.append(_time + timedelta(0,float(i)))
     df["time"] = _t
-    df[""]
-
     return df
     
 def add_datetime_diff(df, _time, _sync, _diff_name, truncate = False):
