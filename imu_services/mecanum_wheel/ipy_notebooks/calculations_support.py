@@ -1,58 +1,47 @@
 import itertools
-from cv2 import dft
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
-
+import warnings
 
 """
 funciton list
 
-    calculate_combinations()
+    combinations_of_pseudo_mat()
     interpolate_data()
     calculate_difference()
     calculate_directional_velocities()
 
 """
 
-def calculate_combinations(_b1, _b2, _b3, _b4, _a1, _a2, _a3, _a4, radius):
+def combinations_of_pseudo_mat(_b1, _b2, _b3, _b4, _a1, _a2, _a3, _a4, radius):
 
     """
     This function calculates all possible combinations of input arguments
-    returns a ndarray of all possible combinations
+    returns a ndarray of pseudo matrices of all possible combinations
     """
     
-    _b1 = range(88, 91, 1)
-    _b2 = range(88, 91, 1)
-    _b3 = range(88, 91, 1)
-    _b4 = range(88, 91, 1)
-    _a1 = range(50, 53, 1)
-    _a2= range(50, 53, 1)
-    _a3= range(50, 53, 1)
-    _a4 = range(50, 53, 1)
-
-    # pseudo_t_list = []
-
-    iterables = itertools.product(_b1, _b2, _b3, _b4, _a1, _a2, _a3, _a4)
-    length_of_iterables = len(list(iterables))
+    iterables = list(itertools.product(_b1, _b2, _b3, _b4, _a1, _a2, _a3, _a4))
+    length_of_iterables = len(iterables)
     pseudo_mat = np.empty((length_of_iterables, 3, 4))
+    iter_array = np.array(iterables)
 
     for idx, _arg in enumerate(itertools.product(_b1, _b2, _b3, _b4, _a1, _a2, _a3, _a4)):
         
-        b1 = -np.radians(_arg[0])
-        b2 = np.radians(_arg[1])
-        b3 = np.radians(_arg[2])
-        b4 = -np.radians(_arg[3])
-
-        g1 = np.pi/4
-        g2 = -np.pi/4
-        g3 = g1
-        g4 = g2
-
         a1 = np.radians(_arg[4])
         a2 = -np.radians(_arg[5])
         a3 = np.radians(_arg[6] + 90)
         a4 = -np.radians(_arg[7] + 90)
+
+        b1 = np.radians(_arg[0])
+        b2 = -np.radians(_arg[1])
+        b3 = np.radians(_arg[2])
+        b4 = -np.radians(_arg[3])
+
+        g1 = -np.pi/4
+        g2 = np.pi/4
+        g3 = g2
+        g4 = g1
         
         li = 101.36/1000
 
@@ -63,9 +52,8 @@ def calculate_combinations(_b1, _b2, _b3, _b4, _a1, _a2, _a3, _a4, radius):
                             )
         
         pseudo_t = np.linalg.pinv(t)
-        # pseudo_t_list.append(pseudo_t)
         pseudo_mat[idx] = pseudo_t
-        return pseudo_mat
+        return pseudo_mat, iter_array, length_of_iterables
 
 def interpolate_data(target, reference, columns):
 
@@ -75,13 +63,24 @@ def interpolate_data(target, reference, columns):
     both should have "time" column to them
     """
 
+    if target.index.values[0] != reference.index.values[0]:
+        target = target.reset_index(drop=True)
+
+    if target["time"].dtype != reference["time"].dtype:
+
+        target["time"] = pd.to_datetime(target["time"])
+        reference["time"] = pd.to_datetime(reference["time"])
+        
+        warnings.warn("time column type is not the same, converting to datetime")
+
     _temp_df = pd.DataFrame(columns=columns)
 
     for i in columns:
-        inp_fn = interp1d(target["time"], target[i], fill_value='extrapolate')
-        _temp_df[i] = inp_fn(reference["time"])
+        inp_fn = interp1d(pd.to_numeric(target["time"]), target[i], axis=0 ,fill_value='extrapolate')
+        _temp_df[i] = inp_fn(pd.to_numeric(reference["time"]))
 
     _temp_df = _temp_df.fillna(0)
+    _temp_df["time"] = reference["time"]
     return _temp_df
 
 def iterate_get_diff(pseudo_mat, wheels, wheel_columns, mc, mc_cols):
@@ -95,10 +94,14 @@ def iterate_get_diff(pseudo_mat, wheels, wheel_columns, mc, mc_cols):
 
     for i in range(ln):
         _temp_df = calculate_directional_velocities(pseudo_mat[i], wheels, col_names=wheel_columns)
-        diff = mc[mc_cols] - _temp_df
-        print(diff)
+
+        for j in range(2):
+            diff = mc[mc_cols[0]] - _temp_df["x"]
+            print(diff)
         break
     pass
+
+
 
 def calculate_directional_velocities(pseudo_t, df, col_names):
 
@@ -119,7 +122,7 @@ def calculate_directional_velocities(pseudo_t, df, col_names):
         and calculates the new velocities
         """
         _v = pseudo_t @ np.array(df[col_names].iloc[i])
-        _val.append(_v.T[0])
+        _val.append(_v.T)
 
     _temp_df[["vx", "vy", "w"]] = _val
 
