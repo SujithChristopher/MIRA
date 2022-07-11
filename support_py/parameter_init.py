@@ -34,3 +34,9 @@ def initialize_parameters(self):
     """
     self.fx_roi = False
     self.imu_trigger = True
+
+def camera_list_init(self):
+    
+    self.camera_list.addItems(self.device_list)
+
+

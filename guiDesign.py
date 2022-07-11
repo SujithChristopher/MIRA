@@ -502,6 +502,12 @@ class Ui_MainWindow(object):
         self.sett_save = QtWidgets.QPushButton(self.tab_4)
         self.sett_save.setGeometry(QtCore.QRect(40, 160, 101, 31))
         self.sett_save.setObjectName("sett_save")
+        self.select_camera = QtWidgets.QPushButton(self.tab_4)
+        self.select_camera.setGeometry(QtCore.QRect(370, 270, 131, 23))
+        self.select_camera.setObjectName("select_camera")
+        self.camera_list = QtWidgets.QListWidget(self.tab_4)
+        self.camera_list.setGeometry(QtCore.QRect(370, 60, 256, 192))
+        self.camera_list.setObjectName("camera_list")
         self.tabWidget.addTab(self.tab_4, "")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -519,7 +525,7 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName("actionExit")
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -601,6 +607,7 @@ class Ui_MainWindow(object):
         self.label_22.setText(_translate("MainWindow", "Folder path"))
         self.label_23.setText(_translate("MainWindow", "Folder path"))
         self.sett_save.setText(_translate("MainWindow", "Save Settings"))
+        self.select_camera.setText(_translate("MainWindow", "Select Camera"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Settings"))
         self.actionNew_Patient.setText(_translate("MainWindow", "New Patient"))
         self.actionExisting_Patient.setText(_translate("MainWindow", "Existing Patient"))

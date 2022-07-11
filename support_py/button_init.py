@@ -75,3 +75,7 @@ def initialize_buttons(self):
     self.p_ses_wid.itemClicked.connect(self.ses_clicked)
     self.p_open.setEnabled(False)
     self.p_open.clicked.connect(self.saveLocation_fun)
+
+    #camera list widget
+    self.camera_list.itemClicked.connect(self.camera_list_clicked)
+

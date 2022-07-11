@@ -48,6 +48,12 @@ from support_py.support import get_calCalibData
 
 from support_py.button_init import initialize_buttons
 from support_py.parameter_init import initialize_parameters
+from support_py.parameter_init import camera_list_init
+
+from support_py.pymf import get_MF_devices
+
+"""importing realsense libraries"""
+import pyrealsense2 as rs
 
 """IMU libraries and functions"""
 import imu_services.imu_2nos as imu
@@ -192,12 +198,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.temp_dir = temp_dir
         self.temp_save = ""
 
+        """get camera list and camera initialization"""
+        self.device_list = get_MF_devices()
+        
+
         """initializing different functions"""
         initialize_parameters(self)  # general parameters
         initialize_buttons(self)  # button connections
         db_create(self)  # database initialization
         initialize_color(self)  # color or theme
         curvy_buttons(self)  # button theme
+        camera_list_init(self)  # camera list initialization
 
         self.acquireSingleframe()
         self.timerfps = fpstimer.FPSTimer(self.fps_val)
@@ -231,6 +242,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             print("closing")
             self.conn.close()
             self.sconn.close()
+
+    def camera_list_clicked(self):
+        
+        inx = self.camera_list.currentRow()
+        _selected = self.device_list[inx]
+
+        if _selected.startswith("Kinect"):
+            self.selected_camera = "KINECT"
+
+        elif _selected.startswith("Intel"):
+            self.selected_camera = "INTEL"
+
+        else:
+            self.selected_camera = "WEBCAM"
+
+        print(self.selected_camera)
 
     def fix_roifun(self):
         if self.fix_roi.isChecked():
@@ -759,14 +786,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         while True:
             if kinectColor.has_new_color_frame() and kinectDepth.has_new_depth_frame():
-                start1 = time.time()
-                colorFrame1 = kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
+                colorFrame = kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
                 depthFrame = kinectDepth.get_last_depth_frame()
 
-                # timestamp = time.time() - starttime
                 timestamp = str(datetime.now())
 
-                colorFrame = colorFrame1.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+                colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+
                 img = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
                 image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
@@ -775,6 +801,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     imageSave = image
                 else:
                     imageSave = cv2.resize(image, (432, 368))
+
                 imgSaveBGR = cv2.cvtColor(imageSave, cv2.COLOR_RGB2BGR)
                 depthFrame = np.reshape(depthFrame, (424, 512))
 
