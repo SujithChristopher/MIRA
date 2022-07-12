@@ -29,7 +29,7 @@ class SerialPort(object):
             # self.csv_file = open(csv_path + "//imu01.csv", "w")
             self.csv_file = open(csv_path, "w")
             self.csv = csv.writer(self.csv_file)
-            self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc", "mils", "sync"])
+            self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc", "mils", "sync", "ax", "ay", "az", "gx", "gy", "gz"])
         self.triggered = True
         self.connected = False
 
