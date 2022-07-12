@@ -29,7 +29,7 @@ class SerialPort(object):
             # self.csv_file = open(csv_path + "//imu01.csv", "w")
             self.csv_file = open(csv_path, "w")
             self.csv = csv.writer(self.csv_file)
-            self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc", "mils", "sync"])
+            self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc", "mils", "sync", "ax", "ay", "az", "gx", "gy", "gz"])
         self.triggered = True
         self.connected = False
 
@@ -84,6 +84,7 @@ class SerialPort(object):
                 _rtc = struct.unpack("Q", self.payload[16:24])    # rtc values time delta
                 mils = struct.unpack("L", self.payload[24:28])
                 _sync = struct.unpack("c", self.payload[28:29])[0].decode("utf-8")
+                _imu_data = struct.unpack("6f", self.payload[29:])
 
                 print(_sync)
 
@@ -99,7 +100,7 @@ class SerialPort(object):
                     nw = datetime.now()     # datetime
 
                 if self.csv_enabled:
-                    self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], _rtcval, mils[0], _sync])
+                    self.csv.writerow([str(nw), val[0], val[1], val[2], val[3], _rtcval, mils[0], _sync, _imu_data[0], _imu_data[1], _imu_data[2], _imu_data[3], _imu_data[4], _imu_data[5]])
                 if keyboard.is_pressed("e"):
                     self.csv_file.close()
                     break
