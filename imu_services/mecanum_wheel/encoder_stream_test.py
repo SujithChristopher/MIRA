@@ -27,7 +27,7 @@ class SerialPort(object):
         self.csv_enabled = csv_enable
         if csv_enable:
             # self.csv_file = open(csv_path + "//imu01.csv", "w")
-            self.csv_file = open(csv_path, "w")
+            self.csv_file = open(csv_path+ "//imu01.csv", "w")
             self.csv = csv.writer(self.csv_file)
             self.csv.writerow(["sys_time", "e_fr", "e_fl", "e_rr", "e_rl", "rtc", "mils", "sync", "ax", "ay", "az", "gx", "gy", "gz"])
         self.triggered = True
@@ -111,12 +111,13 @@ class SerialPort(object):
 
 if __name__ == '__main__':
     # opts, args = getopt.getopt(sys.argv[1:], "p:", ["path"])
-
+# 
     # print(opts[0])
     # _filepath = opts[0][1]
 
     # myport = SerialPort("COM15", 115200, csv_path=_filepath, csv_enable=True)
-    myport = SerialPort("COM4", 115200, csv_path="random_movement_sync.csv", csv_enable=True)
+    # myport = SerialPort("COM4", 115200, csv_path=_filepath, csv_enable=True)
+    myport = SerialPort("COM4", 115200, csv_path="random", csv_enable=False)
     # myport = SerialPort("COM4", 115200)
     myport.run_program()
 

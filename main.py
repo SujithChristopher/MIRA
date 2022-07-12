@@ -50,6 +50,8 @@ from support_py.button_init import initialize_buttons
 from support_py.parameter_init import initialize_parameters
 
 """IMU libraries and functions"""
+
+from imu_services.mecanum_wheel.encoder_stream_test import SerialPort
 import imu_services.imu_2nos as imu
 # from imu_services.imu_2nos import start_imu_service
 import asyncio
@@ -374,8 +376,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # self.threadpool.start(worker)
             print("initializing, please wait")
 
+            # self._imu_p = subprocess.Popen(
+            #     ['python', './/imu_services//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
+
             self._imu_p = subprocess.Popen(
-                ['python', './/imu_services//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
+                ['python', './/imu_services//mecanum_wheel//encoder_stream_test.py', "-p", self.sessionDir])
             # if self.sessionDir:
             #     self._imu_p = subprocess.Popen(['python', './/imu_services//classic_imu_py//reading_imu_data.py'])
             # else:
