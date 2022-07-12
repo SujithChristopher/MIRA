@@ -15,6 +15,7 @@ import numpy as np
 from numpy import random
 import pandas as pd
 import subprocess
+import numba as nb
 
 """pyside modules"""
 
@@ -110,15 +111,11 @@ except:
 now = datetime.now()
 today = date.today()
 
-kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
-kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
-
-kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
 
 """"This function packs color, depth, and timeframes and save them in MSGPACK format"""
 
 
-def save_frames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfile, selection):
+def save_frames(colorImg, depthImg, milliseconds, colorFile, depthFile, paramsfile, selection, kinect):
     depthframesaveformat = np.copy(np.ctypeslib.as_array(depthImg, shape=(
         kinect._depth_frame_data_capacity.value,)))  # TODO Figure out how to solve intermittent up to 3cm differences
 
@@ -200,7 +197,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         """get camera list and camera initialization"""
         self.device_list = get_MF_devices()
-        
+       
 
         """initializing different functions"""
         initialize_parameters(self)  # general parameters
@@ -210,7 +207,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         curvy_buttons(self)  # button theme
         camera_list_init(self)  # camera list initialization
 
-        self.acquireSingleframe()
+        self.select_camera = "KINECT"
+
+
+        self.kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
+        self.kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
+        self.kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
+
+        # self.acquireSingleframe()
         self.timerfps = fpstimer.FPSTimer(self.fps_val)
 
         self.threadpool = QThreadPool()
@@ -219,8 +223,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dt = QDate.currentDate()
         self.dateEdit.setDate(dt)
         self.refreshICN.setIcon(QIcon(r'src\refreshIcon.png'))
-
         self.keyPressEvent = self.keyboard_events
+
+        
 
     def keyboard_events(self, event):
         if event.key() == Qt.Key_Escape:
@@ -433,7 +438,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.selectXYZ.setText("Select Y")
         elif self.calibCounter == 3:
             self.selectXYZ.setText("Show Calib")
-            self.calibDepth = kinectDepth.get_last_depth_frame()
+            self.calibDepth = self.kinectDepth.get_last_depth_frame()
             self.calibPlot = True
             self.calCalibData()
         elif self.calibCounter == 4:
@@ -619,8 +624,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def acquireSingleframe(self):
 
         if self.poseFlag == "RECT":
-            if kinectColor.has_new_color_frame() and kinectDepth.has_new_depth_frame():
-                colorFrame1 = kinectColor.get_last_color_frame()
+            if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
+                colorFrame1 = self.kinectColor.get_last_color_frame()
                 colorFrame = colorFrame1.reshape((1080, 1920, 4))
 
                 img = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
@@ -785,9 +790,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         prev_frame_time = 0
 
         while True:
-            if kinectColor.has_new_color_frame() and kinectDepth.has_new_depth_frame():
-                colorFrame = kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
-                depthFrame = kinectDepth.get_last_depth_frame()
+
+            
+            if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
+                colorFrame = self.kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
+                depthFrame = self.kinectDepth.get_last_depth_frame()
 
                 timestamp = str(datetime.now())
 
@@ -825,9 +832,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.counter = 1
 
                 if self.poseFlag == "REC":
+                    kinect = self.kinect
                     selection = get_clickedtask(self)
                     save_frames(imgSaveBGR, depthFrame, timestamp, self.colourfile, self.depthfile, self.paramFile,
-                                selection)
+                                selection, kinect)
                     self.cv_writer.write(imgSaveBGR)
 
                     # self.vid_writer.write(imageSave, rgb_mode=True)
