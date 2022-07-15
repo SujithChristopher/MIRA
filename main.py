@@ -379,6 +379,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # self._imu_p = subprocess.Popen(
             #     ['python', './/imu_services//classic_imu_py//reading_imu_data.py', "-p", self.sessionDir])
 
+            print(self.sessionDir)
+
             self._imu_p = subprocess.Popen(
                 ['python', './/imu_services//mecanum_wheel//encoder_stream_test.py', "-p", self.sessionDir])
             # if self.sessionDir:
@@ -514,6 +516,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             img2 = pickle.load(pFile)
             h, w, ch = img2.shape
             bytesPerLine = ch * w
+
             convertToQtFormat = QImage(img2.data.tobytes(), w, h, bytesPerLine, QImage.Format_RGB888)
             p = convertToQtFormat.scaled(100, 100, Qt.KeepAspectRatio)
 

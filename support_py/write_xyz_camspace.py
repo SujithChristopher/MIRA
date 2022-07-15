@@ -14,7 +14,7 @@ from pykinect2 import PyKinectV2
 from pykinect2.PyKinectRuntime import _CameraSpacePoint
 
 from support_py import *
-# from mapper import color_2_world
+from mapper import color_2_world
 
 _kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth | PyKinectV2.FrameSourceTypes_Color)
 
@@ -104,4 +104,4 @@ def camspace(pth, res_s=False):
 
 
 if __name__ == "__main__":
-    camspace(r"C:\mira\splitVideos\TEMPXXXXDIRF010120000000XXXXXXXXX\Session 13-09-21_11-12-37_831")
+    camspace(r"C:\Users\CMC\Dropbox\mira\mira_vellore\splitVideos\SUJIXXXXXXXXU010120000000XXXXXXXXX\calibration")
