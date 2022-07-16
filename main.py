@@ -1,6 +1,7 @@
 import sys
 import os
 import pickle
+from matplotlib.pyplot import sca
 import msgpack as mp
 import msgpack_numpy as mpn
 
@@ -15,7 +16,7 @@ import numpy as np
 from numpy import random
 import pandas as pd
 import subprocess
-import numba as nb
+from numba import njit
 
 """pyside modules"""
 
@@ -380,7 +381,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.vid_player.setText("Error: " + self.mediaPlayer.errorString())
         self.statusBar().showMessage("Error: " + self.mediaPlayer.errorString())
 
-        """IMU function, for different purposes, this uses external trigger button"""
+    
+    """IMU function, for different purposes, this uses external trigger button"""
 
     def initializeIMU(self):
         """setting time on IMU watch for old sparkfun borads"""
@@ -780,39 +782,42 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.paramFile.write(p_packed)
         p_packed = mp.packb(2)
         self.paramFile.write(p_packed)
-        # paramsfile.write(p_packed)
-        #
-        # pickle.dump(self.xy, self.paramFile)
-        # pickle.dump(2, self.paramFile)
 
-        starttime = time.time()
         new_frame_time = 0
         prev_frame_time = 0
 
-        while True:
+        @njit
+        def numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, scalling):
 
-            
+            colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+            colorFrame = colorFrame[yPos * scalling:yPos * scalling + yRes, xPos * scalling:xPos * scalling + xRes].copy()
+            depthFrame = np.reshape(depthFrame, (424, 512))
+            return colorFrame, depthFrame
+
+        while True:            
             if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
                 colorFrame = self.kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
                 depthFrame = self.kinectDepth.get_last_depth_frame()
 
-                timestamp = str(datetime.now())
+                timestamp = str(datetime.now())     
+                
+                colorFrame, depthFrame = numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, 2)
 
-                colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+                # colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
 
-                img = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
-                image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
+                colorFrame = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
+                # image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
                 new_frame_time = time.time()
                 if self.res_s:
-                    imageSave = image
+                    imageSave = colorFrame
                 else:
-                    imageSave = cv2.resize(image, (432, 368))
+                    imageSave = cv2.resize(colorFrame, (432, 368))
 
                 imgSaveBGR = cv2.cvtColor(imageSave, cv2.COLOR_RGB2BGR)
-                depthFrame = np.reshape(depthFrame, (424, 512))
+                # depthFrame = np.reshape(depthFrame, (424, 512))
 
-                self.colorImage = image
+                self.colorImage = colorFrame
                 self.depthImage = depthFrame
 
                 flpimg = cv2.flip(self.colorImage, 1)
