@@ -707,7 +707,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def createFile(self, fileCounter):
         self.d1 = today.strftime("%d-%m-%y")
-        # self.tm1 = now.strftime("%d-%m-%y")
         self.tm1 = self.dateEdit.date().toString("dd-MM-yy")
         self.tm2 = now.strftime("%H-%M-%S")
         self.tM = self.tm1 + " " + self.tm2
@@ -718,7 +717,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.sessionName = "Session " + self.tm1 + "_" + self.tm2 + "_" + str(self.rnd)
             self.sessionDir = os.path.join(self.savingDir, self.sessionName)
             self.temp_save = os.path.join(self.temp_dir, self.sessionName)
-            # os.mkdir(self.sessionDir)
             os.mkdir(self.sessionDir)
 
             self.parmsFileName = self.sessionDir + "/" + "PARAMS" + "_" + self.tm + "_" + str(
@@ -802,11 +800,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 timestamp = str(datetime.now())     
                 
                 colorFrame, depthFrame = numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, 2)
-
-                # colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
-
                 colorFrame = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
-                # image = img[yPos * 2:yPos * 2 + yRes, xPos * 2:xPos * 2 + xRes].copy()
 
                 new_frame_time = time.time()
                 if self.res_s:
@@ -815,7 +809,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     imageSave = cv2.resize(colorFrame, (432, 368))
 
                 imgSaveBGR = cv2.cvtColor(imageSave, cv2.COLOR_RGB2BGR)
-                # depthFrame = np.reshape(depthFrame, (424, 512))
 
                 self.colorImage = colorFrame
                 self.depthImage = depthFrame
@@ -832,7 +825,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.fileCounter = self.fileCounter + 1
                     self.colourfile.close()
                     self.depthfile.close()
-                    # self.createFile(self.fileCounter)
                     self.createFile(self.fileCounter)
                     self.counter = 1
 
@@ -842,10 +834,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     save_frames(imgSaveBGR, depthFrame, timestamp, self.colourfile, self.depthfile, self.paramFile,
                                 selection, kinect)
                     self.cv_writer.write(imgSaveBGR)
-
-                    # self.vid_writer.write(imageSave, rgb_mode=True)
                     self.counter = self.counter + 1
-                    # print(self.counter)
                     fps = 1 / (new_frame_time - prev_frame_time)
                     prev_frame_time = new_frame_time
                     # print(str(fps))
