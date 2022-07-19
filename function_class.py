@@ -20,32 +20,33 @@ from support_py.support import db_p_select
 from support_py.support import save_patient_details
 
 from support_py.support import get_calCalibData
-
+from support_py.support import get_clickedtask
 
 
 
 class Mira_functions(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         super(Mira_functions, self).__init__(*args, **kwargs)
+        self.selected_camera = None
 
     def save_frame_fun(self):
         pass
 
     def camera_list_clicked(self):
-            
-            inx = self.camera_list.currentRow()
-            _selected = self.device_list[inx]
 
-            if _selected.startswith("Kinect"):
-                self.selected_camera = "KINECT"
+        inx = self.camera_list.currentRow()
+        _selected = self.device_list[inx]
 
-            elif _selected.startswith("Intel"):
-                self.selected_camera = "INTEL"
+        if _selected.startswith("Kinect"):
+            self.selected_camera = "KINECT"
 
-            else:
-                self.selected_camera = "WEBCAM"
+        elif _selected.startswith("Intel"):
+            self.selected_camera = "INTEL"
 
-            print(self.selected_camera)
+        else:
+            self.selected_camera = "WEBCAM"
+
+        print(self.selected_camera)
 
     def keyboard_events(self, event):
         if event.key() == Qt.Key_Escape:
@@ -67,8 +68,6 @@ class Mira_functions(QtWidgets.QMainWindow, Ui_MainWindow):
             print("closing")
             self.conn.close()
             self.sconn.close()
-
-
 
     def fix_roifun(self):
         if self.fix_roi.isChecked():
@@ -186,7 +185,6 @@ class Mira_functions(QtWidgets.QMainWindow, Ui_MainWindow):
         # print("error")
         # self.vid_player.setText("Error: " + self.mediaPlayer.errorString())
         self.statusBar().showMessage("Error: " + self.mediaPlayer.errorString())
-
 
     def select_task(self, event):
         print(get_clickedtask(self))

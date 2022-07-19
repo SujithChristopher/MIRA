@@ -1,8 +1,6 @@
 import sys
 import os
 import pickle
-import tabnanny
-from matplotlib.pyplot import sca
 import msgpack as mp
 import msgpack_numpy as mpn
 
@@ -15,7 +13,6 @@ import cv2
 import fpstimer
 import numpy as np
 from numpy import random
-import pandas as pd
 import subprocess
 from numba import njit
 
@@ -27,9 +24,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import *
 
-"""this is the main design file"""
-from guiDesign import Ui_MainWindow
-from function_class import Mira_functions # putting all my main functions here, to organize the code
+"""this is the mira function class"""
+from function_class import Mira_functions  # putting all my main functions here, to organize the code
 
 """importing pykinect modules"""
 from pykinect2 import PyKinectV2
@@ -54,17 +50,17 @@ from support_py.button_init import initialize_buttons
 from support_py.parameter_init import initialize_parameters
 from support_py.parameter_init import camera_list_init
 
-from support_py.pymf import get_MF_devices
+from support_py.pymf import get_MF_devices as get_camera_list
 from support_py.calibration import calibrate_using_clicked_points
 
 """importing realsense libraries"""
 import pyrealsense2 as rs
 
 """IMU libraries and functions"""
-import imu_services.imu_2nos as imu
-# from imu_services.imu_2nos import start_imu_service
-import asyncio
-from imu_services.classic_imu_py import reading_imu_data as classic_imu
+# import imu_services.imu_2nos as imu
+# # from imu_services.imu_2nos import start_imu_service
+# import asyncio
+# from imu_services.classic_imu_py import reading_imu_data as classic_imu
 
 """importing settings and creating folders"""
 
@@ -105,16 +101,10 @@ except:
     print("Settings file corrupted")
     # sys.exit()
 
-try:
-    fRenamePth = r"C:\Users\CMC\Documents\openposelibs\pose\data"
-    os.rename(fRenamePth + "/toAnalyse.txt", fRenamePth + "/toAnalyse_.txt")
-except:
-    pass
 
 # datetime object containing current date and time
 now = datetime.now()
 today = date.today()
-
 
 """"This function packs color, depth, and timeframes and save them in MSGPACK format"""
 
@@ -200,8 +190,7 @@ class MainWindow(Mira_functions):
         self.temp_save = ""
 
         """get camera list and camera initialization"""
-        self.device_list = get_MF_devices()
-       
+        self.device_list = get_camera_list()
 
         """initializing different functions"""
         initialize_parameters(self)  # general parameters
@@ -211,13 +200,13 @@ class MainWindow(Mira_functions):
         curvy_buttons(self)  # button theme
         camera_list_init(self)  # camera list initialization
 
-        
         self.select_camera = "INTEL"
 
         self.kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
         self.kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
-        self.kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
-        
+        self.kinect = PyKinectRuntime.PyKinectRuntime(
+            PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
+
         # Configure depth and color streams
         self.realsense_pipeline = rs.pipeline()
         self.realsense_config = rs.config()
@@ -226,13 +215,13 @@ class MainWindow(Mira_functions):
         # pipeline_profile = self.realsense_config.resolve(pipeline_wrapper)
         # device = pipeline_profile.get_device()
         # device_product_line = str(device.get_info(rs.camera_info.product_line))
-        
+
         # if device:
 
         try:
             self.realsense_config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
             self.realsense_config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 30)
-            self.realsense_pipeline.start(self.realsense_config) # start the stream
+            self.realsense_pipeline.start(self.realsense_config)  # start the stream
         except:
             pass
 
@@ -247,7 +236,6 @@ class MainWindow(Mira_functions):
         self.refreshICN.setIcon(QIcon(r'src\refreshIcon.png'))
         self.keyPressEvent = self.keyboard_events
 
-            
     """IMU function, for different purposes, this uses external trigger button"""
 
     def initializeIMU(self):
@@ -285,8 +273,6 @@ class MainWindow(Mira_functions):
             print("stopping imu recording")
             self._imu_p.terminate()
             print("imu recording stopped")
-
-    
 
     def discardSesFun(self):
 
@@ -454,7 +440,6 @@ class MainWindow(Mira_functions):
 
     def acquireSingleframe(self, tab_no=0):
 
-
         if self.select_camera == "KINECT":
             if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
                 colorFrame = self.kinectColor.get_last_color_frame()
@@ -486,7 +471,7 @@ class MainWindow(Mira_functions):
                     self.profilePictureLabel1.setPixmap(QPixmap.fromImage(p))
 
                 elif self.calib:
-                    p = calibrate_using_clicked_points(self, img)                   
+                    p = calibrate_using_clicked_points(self, img)
 
                     self.xyRectPos.emit(self.xPos)
                     painter.end()
@@ -594,14 +579,14 @@ class MainWindow(Mira_functions):
         def numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, scalling, camera=0):
             if camera == 1:
                 colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
-            colorFrame = colorFrame[yPos * scalling:yPos * scalling + yRes, xPos * scalling:xPos * scalling + xRes].copy()
+            colorFrame = colorFrame[yPos * scalling:yPos * scalling + yRes,
+                         xPos * scalling:xPos * scalling + xRes].copy()
             if camera == 1:
                 depthFrame = np.reshape(depthFrame, (424, 512))
             return colorFrame, depthFrame
 
+        while True:
 
-        while True:            
-            
             if self.select_camera == "KINECT":
                 if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
                     colorFrame = self.kinectColor.get_last_color_frame()
@@ -617,15 +602,13 @@ class MainWindow(Mira_functions):
                 depthFrame = frames.get_depth_frame()
                 depthFrame = np.asanyarray(depthFrame.get_data())
 
-            timestamp = str(datetime.now())     
-            
+            timestamp = str(datetime.now())
+
             colorFrame, depthFrame = numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, 2)
             if self.select_camera == "KINECT":
                 colorFrame = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
             elif self.select_camera == "INTEL":
                 colorFrame = cv2.cvtColor(colorFrame, cv2.COLOR_BGR2RGB)
-
-            
 
             new_frame_time = time.time()
             if self.res_s:
@@ -648,7 +631,7 @@ class MainWindow(Mira_functions):
 
             p = convertToQtFormat.scaled(960, 540, Qt.KeepAspectRatio)
             progress_callback.emit(p)
-            
+
             if self.counter == 90:
                 self.fileCounter = self.fileCounter + 1
                 self.colourfile.close()
