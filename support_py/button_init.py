@@ -79,3 +79,7 @@ def initialize_buttons(self):
     #camera list widget
     self.camera_list.itemClicked.connect(self.camera_list_clicked)
 
+    """frame tab"""
+    # self.capture_frame.clicked.connect(self.capture_frame_fun)
+    self.frame_display.mousePressEvent = self.updateRect
+

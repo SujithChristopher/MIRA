@@ -8,7 +8,7 @@ def initialize_parameters(self):
     self.xPos = 0
     self.yPos = 0
 
-    self.fps_val = 15
+    self.fps_val = 30
 
     self.setupUi(self)
     self.poseFlag = "RECT"

@@ -1,6 +1,7 @@
 import sys
 import os
 import pickle
+import tabnanny
 from matplotlib.pyplot import sca
 import msgpack as mp
 import msgpack_numpy as mpn
@@ -53,6 +54,7 @@ from support_py.parameter_init import initialize_parameters
 from support_py.parameter_init import camera_list_init
 
 from support_py.pymf import get_MF_devices
+from support_py.calibration import calibrate_using_clicked_points
 
 """importing realsense libraries"""
 import pyrealsense2 as rs
@@ -208,12 +210,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         curvy_buttons(self)  # button theme
         camera_list_init(self)  # camera list initialization
 
-        self.select_camera = "KINECT"
-
+        
+        self.select_camera = "INTEL"
 
         self.kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
         self.kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
         self.kinect = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color | PyKinectV2.FrameSourceTypes_Depth)
+        
+        # Configure depth and color streams
+        self.realsense_pipeline = rs.pipeline()
+        self.realsense_config = rs.config()
+
+        # pipeline_wrapper = rs.pipeline_wrapper(self.realsense_pipeline)
+        # pipeline_profile = self.realsense_config.resolve(pipeline_wrapper)
+        # device = pipeline_profile.get_device()
+        # device_product_line = str(device.get_info(rs.camera_info.product_line))
+        
+        # if device:
+
+        try:
+            self.realsense_config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
+            self.realsense_config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 30)
+            self.realsense_pipeline.start(self.realsense_config) # start the stream
+        except:
+            pass
 
         # self.acquireSingleframe()
         self.timerfps = fpstimer.FPSTimer(self.fps_val)
@@ -591,11 +611,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.statusBar().showMessage('Stopped recording')
 
     def updateRect(self, event):
-        print(event.x(), event.y())
-        self.xPos = event.x()
-        self.yPos = event.y()
-        self.acquireSingleframe()
-        self.xyRectPos.emit(self.xPos)
+        if self.selected_camera is not None:
+
+            if self.tabWidget.currentIndex() == 0:
+                print(event.x(), event.y())
+                self.xPos = event.x()
+                self.yPos = event.y()
+                self.acquireSingleframe()
+                self.xyRectPos.emit(self.xPos)
+
+            elif self.tabWidget.currentIndex() == 1:
+                self.xPos = event.x()
+                self.yPos = event.y()
+                self.acquireSingleframe(1)
+                self.xyRectPos.emit(self.xPos)
 
     @pyqtSlot(QImage)
     def setImage(self, image):
@@ -623,14 +652,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def thread_complete(self):
         print("THREAD COMPLETE!")
 
-    def acquireSingleframe(self):
+    def acquireSingleframe(self, tab_no=0):
 
-        if self.poseFlag == "RECT":
+
+        if self.select_camera == "KINECT":
             if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
-                colorFrame1 = self.kinectColor.get_last_color_frame()
-                colorFrame = colorFrame1.reshape((1080, 1920, 4))
-
+                colorFrame = self.kinectColor.get_last_color_frame()
+                colorFrame = colorFrame.reshape((1080, 1920, 4))
                 img = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
+
+        if self.select_camera == "CAMERA":
+            pass
+
+        if self.select_camera == "INTEL":
+            frames = self.realsense_pipeline.wait_for_frames()
+            colorFrame = frames.get_color_frame()
+            colorFrame = np.asanyarray(colorFrame.get_data())
+            img = cv2.cvtColor(colorFrame, cv2.COLOR_BGR2RGB)
+
+        try:
+            if self.poseFlag == "RECT":
 
                 if self.capF:
                     """
@@ -645,46 +686,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.profilePictureLabel1.setPixmap(QPixmap.fromImage(p))
 
                 elif self.calib:
-                    """
-                    the following is picking calibration points
-                    """
-                    h, w, ch = img.shape
-                    bytesPerLine = ch * w
-                    convertToQtFormat = QImage(img.data.tobytes(), w, h, bytesPerLine, QImage.Format_RGB888)
-                    p = convertToQtFormat.scaled(960, 540, Qt.KeepAspectRatio)
-                    painter = QPainter(p)
-
-                    if self.calibCounter == 0:
-                        painter.setPen(QPen(Qt.red, 3, Qt.SolidLine))
-                        painter.drawEllipse(self.xPos, self.yPos, 5, 5)
-
-                    elif self.calibCounter == 1:
-                        painter.setPen(QPen(Qt.red, 3, Qt.SolidLine))
-                        painter.drawEllipse(self.calibXYZ[0][0], self.calibXYZ[0][1], 5, 5)
-                        painter.setPen(QPen(Qt.blue, 3, Qt.SolidLine))
-                        painter.drawEllipse(self.xPos, self.yPos, 5, 5)
-
-                    elif self.calibCounter == 2:
-                        painter.setPen(QPen(Qt.red, 3, Qt.SolidLine))
-                        painter.drawEllipse(self.calibXYZ[0][0], self.calibXYZ[0][1], 5, 5)
-                        painter.setPen(QPen(Qt.blue, 3, Qt.SolidLine))
-                        painter.drawEllipse(self.calibXYZ[1][0], self.calibXYZ[1][1], 5, 5)
-                        painter.setPen(QPen(Qt.green, 3, Qt.SolidLine))
-                        painter.drawEllipse(self.xPos, self.yPos, 5, 5)
-
-                    elif self.calibCounter > 2:
-                        painter.setPen(QPen(Qt.red, 3, Qt.SolidLine))
-                        painter.drawLine(self.calibXYZ[0][0] + 2, self.calibXYZ[0][1] + 2, self.calibXYZ[1][0] + 2,
-                                         self.calibXYZ[1][1] + 2)
-                        painter.drawEllipse(self.calibXYZ[0][0], self.calibXYZ[0][1], 5, 5)
-                        painter.setPen(QPen(Qt.blue, 3, Qt.SolidLine))
-                        painter.drawLine(self.calibXYZ[2][0] + 2, self.calibXYZ[2][1] + 2, self.calibXYZ[0][0] + 2,
-                                         self.calibXYZ[0][1] + 2)
-                        painter.drawEllipse(self.calibXYZ[1][0], self.calibXYZ[1][1], 5, 5)
-                        painter.setPen(QPen(Qt.green, 3, Qt.SolidLine))
-                        painter.drawLine(self.calibXYZ[0][0] + 2, self.calibXYZ[0][1] + 2, self.calibXYZ[0][0] + 2,
-                                         self.calibXYZ[0][1] - 50)
-                        painter.drawEllipse(self.calibXYZ[2][0], self.calibXYZ[2][1], 5, 5)
+                    p = calibrate_using_clicked_points(self, img)                   
 
                     self.xyRectPos.emit(self.xPos)
                     painter.end()
@@ -703,7 +705,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     painter.drawRect(self.xPos, self.yPos, 432, 368)
                     painter.end()
                     self.xyRectPos.emit(self.xPos)
-                    self.displayLabel.setPixmap(QPixmap.fromImage(p))
+                    if tab_no == 1:
+                        self.frame_display.setPixmap(QPixmap.fromImage(p))
+                    else:
+                        self.displayLabel.setPixmap(QPixmap.fromImage(p))
+        except:
+            pass
 
     def createFile(self, fileCounter):
         self.d1 = today.strftime("%d-%m-%y")
@@ -785,71 +792,93 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         prev_frame_time = 0
 
         @njit
-        def numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, scalling):
-
-            colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+        def numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, scalling, camera=0):
+            if camera == 1:
+                colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
             colorFrame = colorFrame[yPos * scalling:yPos * scalling + yRes, xPos * scalling:xPos * scalling + xRes].copy()
-            depthFrame = np.reshape(depthFrame, (424, 512))
+            if camera == 1:
+                depthFrame = np.reshape(depthFrame, (424, 512))
             return colorFrame, depthFrame
 
+
         while True:            
-            if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
-                colorFrame = self.kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
-                depthFrame = self.kinectDepth.get_last_depth_frame()
+            
+            if self.select_camera == "KINECT":
+                if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
+                    colorFrame = self.kinectColor.get_last_color_frame()
+                    depthFrame = self.kinectDepth.get_last_depth_frame()
 
-                timestamp = str(datetime.now())     
-                
-                colorFrame, depthFrame = numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, 2)
+            elif self.select_camera == "CAMERA":
+                pass
+
+            elif self.select_camera == "INTEL":
+                frames = self.realsense_pipeline.wait_for_frames()
+                colorFrame = frames.get_color_frame()
+                colorFrame = np.asanyarray(colorFrame.get_data())
+                depthFrame = frames.get_depth_frame()
+                depthFrame = np.asanyarray(depthFrame.get_data())
+
+            timestamp = str(datetime.now())     
+            
+            colorFrame, depthFrame = numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, 2)
+            if self.select_camera == "KINECT":
                 colorFrame = cv2.cvtColor(colorFrame, cv2.COLOR_BGRA2RGB)
+            elif self.select_camera == "INTEL":
+                colorFrame = cv2.cvtColor(colorFrame, cv2.COLOR_BGR2RGB)
 
-                new_frame_time = time.time()
-                if self.res_s:
-                    imageSave = colorFrame
-                else:
-                    imageSave = cv2.resize(colorFrame, (432, 368))
+            
 
-                imgSaveBGR = cv2.cvtColor(imageSave, cv2.COLOR_RGB2BGR)
+            new_frame_time = time.time()
+            if self.res_s:
+                imageSave = colorFrame
+            else:
+                imageSave = cv2.resize(colorFrame, (432, 368))
 
-                self.colorImage = colorFrame
-                self.depthImage = depthFrame
+            if self.select_camera == "INTEL":
+                depthFrame = cv2.resize(depthFrame, (424, 512))
 
-                flpimg = cv2.flip(self.colorImage, 1)
-                h1, w1, ch = flpimg.shape
-                bytesPerLine = ch * w1
-                convertToQtFormat = QImage(flpimg.data.tobytes(), w1, h1, bytesPerLine, QImage.Format_RGB888)
+            imgSaveBGR = cv2.cvtColor(imageSave, cv2.COLOR_RGB2BGR)
 
-                p = convertToQtFormat.scaled(960, 540, Qt.KeepAspectRatio)
-                progress_callback.emit(p)
+            self.colorImage = colorFrame
+            self.depthImage = depthFrame
 
-                if self.counter == 90:
-                    self.fileCounter = self.fileCounter + 1
-                    self.colourfile.close()
-                    self.depthfile.close()
-                    self.createFile(self.fileCounter)
-                    self.counter = 1
+            flpimg = cv2.flip(self.colorImage, 1)
+            h1, w1, ch = flpimg.shape
+            bytesPerLine = ch * w1
+            convertToQtFormat = QImage(flpimg.data.tobytes(), w1, h1, bytesPerLine, QImage.Format_RGB888)
 
-                if self.poseFlag == "REC":
-                    kinect = self.kinect
-                    selection = get_clickedtask(self)
-                    save_frames(imgSaveBGR, depthFrame, timestamp, self.colourfile, self.depthfile, self.paramFile,
-                                selection, kinect)
-                    self.cv_writer.write(imgSaveBGR)
-                    self.counter = self.counter + 1
-                    fps = 1 / (new_frame_time - prev_frame_time)
-                    prev_frame_time = new_frame_time
-                    # print(str(fps))
+            p = convertToQtFormat.scaled(960, 540, Qt.KeepAspectRatio)
+            progress_callback.emit(p)
+            
+            if self.counter == 90:
+                self.fileCounter = self.fileCounter + 1
+                self.colourfile.close()
+                self.depthfile.close()
+                self.createFile(self.fileCounter)
+                self.counter = 1
 
-                elif self.poseFlag == "SREC":
-                    self.colourfile.close()
-                    self.depthfile.close()
-                    self.paramFile.close()
-                    self.cv_writer.release()
-                    self.poseFlag = "ABC"
+            if self.poseFlag == "REC":
+                kinect = self.kinect
+                selection = get_clickedtask(self)
+                save_frames(imgSaveBGR, depthFrame, timestamp, self.colourfile, self.depthfile, self.paramFile,
+                            selection, kinect)
+                self.cv_writer.write(imgSaveBGR)
+                self.counter = self.counter + 1
+                fps = 1 / (new_frame_time - prev_frame_time)
+                prev_frame_time = new_frame_time
+                # print(str(fps))
 
-                self.timerfps.sleep()
+            elif self.poseFlag == "SREC":
+                self.colourfile.close()
+                self.depthfile.close()
+                self.paramFile.close()
+                self.cv_writer.release()
+                self.poseFlag = "ABC"
 
-                if self.newSesBr:
-                    break
+            self.timerfps.sleep()
+
+            if self.newSesBr:
+                break
 
 
 if __name__ == "__main__":

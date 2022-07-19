@@ -2,7 +2,7 @@ pyuic5 -x guiv1.ui -o guiDesign.py
 pyuic5 -x guiv2.ui -o guiDesignV2.py
 pyuic5 -x guiv3.ui -o guiDesignV2.py
 pyuic5 -x guiv4.ui -o guiDesignV3.py
-pyuic5 -x guiv5.ui -o guiDesignV3.py
+pyuic5 -x gui_xml_file.ui -o guiDesign.py
 
 
 pyinstaller -D guiv4_31.py --add-data<.\src;.\dist\guiv4_31>
