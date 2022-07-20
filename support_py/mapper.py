@@ -5,6 +5,10 @@ All rights reserved.
 Feel free to use and modify and if you like it give it a star.
 """
 
+import numpy as np
+import ctypes
+from pykinect2.PyKinectRuntime import _CameraSpacePoint
+
 
 def subscribe_coordinate_mapping_changed(kinect):
     return kinect._mapper.SubscribeCoordinateMappingChanged()
@@ -209,8 +213,7 @@ def depth_2_world(kinect, depth_frame_data, camera_space_point, as_array=False):
     :param as_array: returns the data as a numpy array
     :return: returns the DepthFrame mapped to camera space
     """
-    import numpy as np
-    import ctypes
+
     depth2world_points_type = camera_space_point * int(512 * 424)
     depth2world_points = ctypes.cast(depth2world_points_type(), ctypes.POINTER(camera_space_point))
     kinect._mapper.MapDepthFrameToCameraSpace(ctypes.c_uint(512 * 424), depth_frame_data, ctypes.c_uint(512 * 424), depth2world_points)

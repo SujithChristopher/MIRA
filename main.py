@@ -53,6 +53,9 @@ from support_py.parameter_init import camera_list_init
 from support_py.pymf import get_MF_devices as get_camera_list
 from support_py.calibration import calibrate_using_clicked_points
 
+from support_py.mapper import depth_2_world
+from pykinect2.PyKinectRuntime import _CameraSpacePoint
+
 """importing realsense libraries"""
 import pyrealsense2 as rs
 
@@ -100,7 +103,6 @@ try:
 except:
     print("Settings file corrupted")
     # sys.exit()
-
 
 # datetime object containing current date and time
 now = datetime.now()
@@ -200,7 +202,7 @@ class MainWindow(Mira_functions):
         curvy_buttons(self)  # button theme
         camera_list_init(self)  # camera list initialization
 
-        self.select_camera = "INTEL"
+        self.select_camera = "KINECT"
 
         self.kinectColor = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Color)
         self.kinectDepth = PyKinectRuntime.PyKinectRuntime(PyKinectV2.FrameSourceTypes_Depth)
@@ -373,7 +375,7 @@ class MainWindow(Mira_functions):
             else:
                 os.makedirs(parent)
 
-            self.tabWidget.setCurrentIndex(1)
+            self.tabWidget.setCurrentIndex(2)
 
     def savePatientDetails(self):
         save_patient_details(self)
@@ -549,7 +551,7 @@ class MainWindow(Mira_functions):
 
     """main function for read, disp, save camera frames"""
 
-    def readFrame(self, progress_callback):
+    def readFrame(self, progress_callback, get_3d_pos=False):
 
         if self.fx_roi:
             yPos = 112
@@ -576,13 +578,21 @@ class MainWindow(Mira_functions):
         prev_frame_time = 0
 
         @njit
-        def numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, scalling, camera=0):
-            if camera == 1:
+        def numba_resize(colorFrame, depthFrame, yPos, xPos, yRes, xRes, scalling, camera=0, cam_space=False):
+            if camera == 1 and not cam_space:
                 colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+                depthFrame = np.reshape(depthFrame, (424, 512))
+
+            elif camera == 1 and cam_space:
+                colorFrame = colorFrame.reshape((1080, 1920, 4))  # 1920 c x 1080 r with 4 bytes (BGRA) per pixel
+
             colorFrame = colorFrame[yPos * scalling:yPos * scalling + yRes,
                          xPos * scalling:xPos * scalling + xRes].copy()
-            if camera == 1:
-                depthFrame = np.reshape(depthFrame, (424, 512))
+
+            if cam_space:
+                depthFrame = depthFrame[yPos * scalling:yPos * scalling + yRes,
+                             xPos * scalling:xPos * scalling + xRes].copy()
+
             return colorFrame, depthFrame
 
         while True:
@@ -590,7 +600,12 @@ class MainWindow(Mira_functions):
             if self.select_camera == "KINECT":
                 if self.kinectColor.has_new_color_frame() and self.kinectDepth.has_new_depth_frame():
                     colorFrame = self.kinectColor.get_last_color_frame()
-                    depthFrame = self.kinectDepth.get_last_depth_frame()
+
+                    if get_3d_pos:
+                        depthPointer = self.kinectDepth._depth_frame_data
+                        depthFrame = depth_2_world(self.kinect, depthPointer, _CameraSpacePoint, True)
+                    else:
+                        depthFrame = self.kinectDepth.get_last_depth_frame()
 
             elif self.select_camera == "CAMERA":
                 pass

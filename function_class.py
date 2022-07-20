@@ -23,7 +23,6 @@ from support_py.support import get_calCalibData
 from support_py.support import get_clickedtask
 
 
-
 class Mira_functions(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
         super(Mira_functions, self).__init__(*args, **kwargs)
@@ -233,3 +232,15 @@ class Mira_functions(QtWidgets.QMainWindow, Ui_MainWindow):
         self.capF = True
         self.acquireSingleframe()
         self.capF = False
+
+    """ second tab save frames """
+
+    def save_current_frame(self):
+        if self.sessionDir == "" or self.sessionDir is None:
+            print("please select the patient directory")
+
+        else:
+            _frame_pth = os.path.join(self.sessionDir, "FRAME_", self.session)
+
+
+

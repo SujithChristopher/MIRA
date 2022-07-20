@@ -83,3 +83,5 @@ def initialize_buttons(self):
     # self.capture_frame.clicked.connect(self.capture_frame_fun)
     self.frame_display.mousePressEvent = self.updateRect
 
+    self.save_frame_button.clicked.connect(self.save_current_frame)
+
