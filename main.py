@@ -615,6 +615,7 @@ class MainWindow(Mira_functions):
                 colorFrame = frames.get_color_frame()
                 colorFrame = np.asanyarray(colorFrame.get_data())
                 depthFrame = frames.get_depth_frame()
+                
                 depthFrame = np.asanyarray(depthFrame.get_data())
 
             timestamp = str(datetime.now())
