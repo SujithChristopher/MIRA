@@ -756,18 +756,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.paramFile.write(p_packed)
         p_packed = mp.packb(2)
         self.paramFile.write(p_packed)
-        # paramsfile.write(p_packed)
-        #
-        # pickle.dump(self.xy, self.paramFile)
-        # pickle.dump(2, self.paramFile)
 
-        starttime = time.time()
         new_frame_time = 0
         prev_frame_time = 0
 
         while True:
             if kinectColor.has_new_color_frame() and kinectDepth.has_new_depth_frame():
-                start1 = time.time()
+
                 colorFrame1 = kinectColor.get_last_color_frame()  # PyKinect2 returns a color frame in a linear array of size (8294400,)
                 depthFrame = kinectDepth.get_last_depth_frame()
 
