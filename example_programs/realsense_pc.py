@@ -309,7 +309,7 @@ while True:
         # Pointcloud data to arrays
         v, t = points.get_vertices(), points.get_texture_coordinates()
         verts = np.asanyarray(v).view(np.float32).reshape(-1, 3)  # xyz
-        print(verts)
+        print(np.max(np.max(verts)))
         texcoords = np.asanyarray(t).view(np.float32).reshape(-1, 2)  # uv
 
     # Render
